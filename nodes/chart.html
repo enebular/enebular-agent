@@ -1,0 +1,95 @@
+<!--
+  Copyright 2015 Atsushi Kojo.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/x-red" data-template-name="chart">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="chart">
+  <p>chart</p>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('chart', {
+    category: 'output',
+    color: '#87a980',
+    defaults: {
+      name: { value: '' }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'debug.png',
+    label: function () {
+      return this.name || 'chart';
+    },
+    onpaletteadd: function () {
+      var content = document.createElement('div');
+      content.id = 'tab-chart';
+
+      var list = document.createElement('div');
+      list.id = 'chart-content';
+      content.appendChild(list);
+
+      RED.sidebar.addTab('chart', content);
+
+      RED.comms.subscribe('chart', function (t, o) {
+        var d = new Date();
+        var s = d.getSeconds();
+        var elemid = 'chart-' + o.id.replace('.', '-');
+        if (RED.chart == null) RED.chart = {};
+        if (elemid in RED.chart) {
+          o.msg.payload.push(['x', d]);
+          RED.chart[elemid].flow({
+            columns: o.msg.payload,
+            length: 1
+          });
+        } else {
+          var chartBox = document.createElement('div');
+          var chart = document.createElement('div');
+          var title = document.createElement('p');
+          chartBox.style.padding = '10px';
+          list.appendChild(chartBox);
+          title.innerHTML = o.name;
+          title.style.textAlign = 'center';
+          title.style.paddingTop = '10px';
+          chartBox.appendChild(title);
+          chart.id = elemid;
+          chart.style.border = '1px solid #eee';
+          chartBox.appendChild(chart);
+          RED.chart[elemid] = c3.generate({
+            bindto: '#' + elemid,
+            data: {
+              type: 'spline',
+              x: 'x',
+              columns: [
+                ['x',d,d,d,d,d],
+                ['sensor1',0,0,0,0,0],
+                ['sensor2',0,0,0,0,0]
+              ]
+            },
+            padding: { top: 20, right: 20, bottom: 20 },
+            axis: { x: { type: 'timeseries', tick: { format: '%H:%M:%S' } } },
+            grid: { x: { show: true }, y: { show: true } },
+            color: { pattern: ['#dcdcdc', '#97bbcf'] }
+          });
+        }
+      });
+    }
+  });
+</script>

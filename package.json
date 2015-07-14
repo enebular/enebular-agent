@@ -1,0 +1,17 @@
+{
+  "name": "enebular-agent",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "when": "~3.x",
+    "mongodb": "~1.4.x",
+    "express": "~4.x",
+    "ejs": "~2.x",
+    "node-red": "~0.10.x",
+    "node-red-contrib-ds18b20": "~0.0.3",
+    "node-red-contrib-td": "~0.0.8",
+    "node-red-node-pusher": "~0.0.2"
+  }
+}
