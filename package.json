@@ -5,6 +5,7 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "bcryptjs": "~2.x",
     "when": "~3.x",
     "mongodb": "~1.4.x",
     "express": "~4.x",

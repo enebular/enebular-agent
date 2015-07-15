@@ -8,9 +8,11 @@ app.use('/red', express.static('public'));
 var server = http.createServer(app);
 
 if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
+  console.log(process.env.NODE_RED_USERNAME, process.env.NODE_RED_PASSWORD);
   settings.adminAuth = {
     type: "credentials",
     users: function(username) {
+      console.log('users', username);
       if (process.env.NODE_RED_USERNAME == username) {
         return when.resolve({username:username,permissions:"*"});
       } else {
@@ -18,6 +20,7 @@ if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
       }
     },
     authenticate: function(username, password) {
+      console.log('authenticate', username, password);
       if (process.env.NODE_RED_USERNAME == username &&
         process.env.NODE_RED_PASSWORD == password) {
         return when.resolve({username:username,permissions:"*"});
@@ -26,6 +29,15 @@ if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
       }
     }
   }
+
+  settings.adminAuth = {
+    type: 'credentials',
+    users: [{
+      username: process.env.NODE_RED_USERNAME,
+      password: require('bcryptjs').hashSync(process.env.NODE_RED_PASSWORD, 8),
+      permissions: '*'
+    }]
+  };
 } else {
   settings.adminAuth = {
     type: 'credentials',
