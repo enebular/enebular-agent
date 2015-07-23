@@ -52,5 +52,8 @@ if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
 RED.init(server, settings);
 app.use(settings.httpAdminRoot, RED.httpAdmin);
 app.use(settings.httpNodeRoot, RED.httpNode);
-server.listen(5000);
+//server.listen(5000);
+var port = process.env.PORT || 5000;
+server.listen(port);
+
 RED.start();
