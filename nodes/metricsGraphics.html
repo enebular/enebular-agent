@@ -1,0 +1,324 @@
+<!--
+  Copyright 2015 Atsushi Kojo.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/x-red" data-template-name="metrics graphics">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-column"><i class="fa fa-columns"></i> Column</label>
+    <input type="text" id="node-input-column" style="width:200px">
+    <div class="btn-group">
+      <a title="play" class="btn chart-play" href="#">
+        <i class="fa fa-play"></i>
+      </a>
+      <a title="pause" class="btn chart-pause" href="#">
+        <i class="fa fa-pause"></i>
+      </a>
+      <a title="refresh" class="btn chart-refresh" href="#">
+        <i class="fa fa-refresh"></i>
+      </a>
+      <a title="clear" class="btn chart-clear" href="#">
+        <i class="fa fa-remove"></i>
+      </a>
+    </div>
+  </div>
+  <div class="form-row node-input-route-container-row" style="margin-bottom: 0px;">
+    <div id="node-input-route-container-div" style="box-sizing: border-box; border-radius: 5px; height: 310px; padding: 5px; border: 1px solid #ccc; overflow-y:scroll;">
+      <ol id="node-input-route-container" style=" list-style-type:none; margin: 0;"></ol>
+    </div>
+  </div>
+  <div class="form-row">
+    <a href="#" class="btn btn-mini" id="node-input-add-route" style="margin-top: 4px;"><i class="fa fa-plus"></i> route</a>
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="metrics graphics">
+  <p>chart</p>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('metrics graphics', {
+    category: 'output',
+    color: '#a0c5e4',
+    defaults: {
+      name: { value: '' },
+      column: { value: '20' },
+      routes: { value: [] }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'chart-icon.png',
+    label: function () {
+      return this.name || 'metrics graphics';
+    },
+    oneditprepare: function () {
+      var node = this;
+      function generateRoute (i, route) {
+        var container = $('<li/>', {'class': 'route-container'});
+        var row = $('<div/>').appendTo(container);
+        $('<i/>', {'class': 'node-input-route-handle fa fa-bars'}).appendTo(row);
+        $('<span/>', {'class': 'node-input-route-index'}).html(i).appendTo(row);
+        $('<input/>', {'type': 'text', 'class': 'node-input-route-key', 'placeholder': 'Key', 'value': route.key}).appendTo(row);
+        $('<input/>', {'type': 'text', 'class': 'node-input-route-legend', 'placeholder': 'Legend', 'value': route.legend}).appendTo(row);
+        var finalspan = $('<span/>', {'class': 'finalspan'}).appendTo(row);
+        var deleteButton = $('<a/>',{'href': '#', 'class': 'editor-button editor-button-small'}).appendTo(finalspan);
+        $('<i/>', {'class': 'fa fa-remove'}).appendTo(deleteButton);
+        deleteButton.click(function () {
+          container.css({'background': '#fee'});
+          container.fadeOut(300, function () {
+            $(this).remove();
+            $("#node-input-route-container").children().each(function (i) {
+              $(this).find('.node-input-route-index').html(i + 1);
+            });
+          });
+        });
+        $("#node-input-route-container").append(container);
+      }
+      $(".chart-play").click(function () {
+        changeState(node, 'enable');
+      });
+      $(".chart-pause").click(function () {
+        changeState(node, 'disable');
+      });
+      $(".chart-refresh").click(function () {
+        changeState(node, 'refresh');
+      });
+      $(".chart-clear").click(function () {
+        clearChart(node);
+      });
+      $("#node-input-add-route").click(function () {
+        generateRoute($("#node-input-route-container").children().length + 1, {'key': '', 'legend': ''});
+        $("#node-input-route-container-div").scrollTop($("#node-input-route-container-div").get(0).scrollHeight);
+      });
+      for (var i = 0; i < this.routes.length; i++) {
+        generateRoute(i + 1, this.routes[i]);
+      }
+      function chartDialogResize () {
+        var rows = $("#dialog-form>div:not(.node-input-route-container-row)");
+        var height = $("#dialog-form").height();
+        for (var i = 0; i < rows.size(); i++) {
+          height -= $(rows[i]).outerHeight(true);
+        }
+        var editorRow = $("#dialog-form>div.node-input-route-container-row");
+        height -= (parseInt(editorRow.css('marginTop')) + parseInt(editorRow.css('marginBottom')));
+        $("#node-input-route-container-div").css('height', height + 'px');
+      };
+      $("#node-input-route-container").sortable({
+        axis: 'y',
+        update: function (event, ui) {
+          var routes = $("#node-input-route-container").children();
+          routes.each(function (i) {
+            $(this).find('.node-input-route-index').html(i + 1);
+          });
+        },
+        handle: '.node-input-route-handle',
+        cursor: 'move'
+      });
+      $("#node-input-route-container .node-input-route-handle").disableSelection();
+      $("#dialog").on('dialogresize', chartDialogResize);
+      $("#dialog").one('dialogopen', function (ev) {
+        var size = $("#dialog").dialog('option', 'sizeCache-chart');
+        if (size) {
+          $("#dialog").dialog('option', 'width', size.width);
+          $("#dialog").dialog('option', 'height', size.height);
+          chartDialogResize();
+        }
+      });
+      $("#dialog").one('dialogclose', function (ev, ui) {
+        $("#dialog").off('dialogresize', chartDialogResize);
+      });
+    },
+    oneditsave: function() {
+      var node = this;
+      var routes = $("#node-input-route-container").children();
+      node.routes = [];
+      routes.each(function (i) {
+        var route = $(this);
+        node.routes.push({
+          'key': route.find('.node-input-route-key').val(),
+          'legend': route.find('.node-input-route-legend').val()
+        });
+      });
+    },
+    onpaletteadd: function () {
+      var toolbar = $('<div/>', {'id': 'chart-toolbar'}).html('<div class="btn-group pull-right"><a id="chart-tab-clear" title="clear all" class="btn btn-mini" href="#"><i class="fa fa-trash"></i></a></div>');
+      var content = $('<div/>', {'id': 'chart-content'});
+      var chartTab = $('<div/>', {'id': 'tab-chart'}).append(toolbar).append(content);
+      RED.sidebar.addTab('chart', chartTab);
+      RED.sidebar.show('chart');
+      this.handleMetrics = function (t, o) {
+        if ($("#tab-chart").css('display') == 'block' && document.hasFocus()) {
+          var elemid = 'chart-' + o.id.replace('.', '-');
+          if (!document.getElementById(elemid)) {
+            var panel = $('<div/>', {'class': 'panel'}).html('<div class="btn-group pull-right"><a id="play-' + elemid + '" title="play" class="btn btn-mini" href="#"><i class="fa fa-play"></i></a><a id="pause-' + elemid + '" title="pause" class="btn btn-mini" href="#"><i class="fa fa-pause"></i></a><a id="refresh-' + elemid + '" title="refresh" class="btn btn-mini" href="#"><i class="fa fa-refresh"></i></a><a id="clear-' + elemid + '" title="clear" class="btn btn-mini" href="#"><i class="fa fa-remove"></i></a></div>');
+            var legend = $('<div/>', {'id': 'legend-' + elemid, 'class': 'legend'});
+            var chart = $('<div/>', {'id': elemid, 'class': 'tab-chart'}).append(panel).append(legend);
+            $('<div/>', {'class': 'chart-box'}).append(chart).appendTo(content);
+            $("#" + elemid).on({
+              'mouseenter': function () {
+                $(this).parents('.chart-box').css('border-left', '8px solid #999').css('border-right', '8px solid #999');
+                var n = RED.nodes.node(o.id);
+                if (n) {
+                  n.highlighted = true;
+                  n.dirty = true;
+                }
+                RED.view.redraw();
+              },
+              'mouseleave': function () {
+                $(this).parents('.chart-box').css('border-left', '').css('border-right', '');
+                var n = RED.nodes.node(o.id);
+                if (n) {
+                  n.highlighted = false;
+                  n.dirty = true;
+                }
+                RED.view.redraw();
+              }
+            });
+            $("#play-" + elemid).on('click', function () {
+              changeState({'id': o.id, 'name': o.name}, 'enable');
+            });
+            $("#pause-" + elemid).on('click', function () {
+              changeState({'id': o.id, 'name': o.name}, 'disable');
+            });
+            $("#refresh-" + elemid).on('click', function () {
+              changeState({'id': o.id, 'name': o.name}, 'refresh');
+            });
+            $("#clear-" + elemid).on('click', function () {
+              clearChart({'id': o.id, 'name': o.name});
+            });
+          }
+          for (var i = 0; i < o.data.length; i++) {
+            o.data[i].date = new Date(o.data[i].date);
+          }
+          o.chartOption.data = o.data;
+          o.chartOption.legend_target = '#legend-' + elemid;
+          o.chartOption.target = '#' + elemid;
+          MG.data_graphic(o.chartOption);
+        }
+      };
+      RED.comms.subscribe('chart', this.handleMetrics);
+      $("#chart-tab-clear").click(function () {
+        $(".chart-box").remove();
+        RED.nodes.eachNode(function(node) {
+          node.highlighted = false;
+          node.dirty = true;
+        });
+        RED.view.redraw();
+      });
+    },
+    onpaletteremove: function () {
+      RED.comms.unsubscribe('chart', this.handleMetrics);
+      RED.sidebar.removeTab('chart');
+      delete RED._chart;
+    }
+  });
+
+  function changeState (node, state) {
+    d3.xhr("metricsgraphics/" + node.id + "/" + state).post(function (err, resp) {
+      if (err) {
+        if (err.status == 404) {
+          RED.notify("<strong>Error</strong>: debug node not deployed", "error");
+        } else if (err.status == 0) {
+          RED.notify("<strong>Error</strong>: no response from server", "error");
+        } else {
+          RED.notify("<strong>Error</strong>: unexpected error: (" + err.status + ")" + err.response, "error");
+        }
+      } else if (resp.status == 200) {
+        RED.notify("Successfully activated: " + node.name, "success");
+      } else if (resp.status == 201) {
+        RED.notify("Successfully deactivated: " + node.name, "success");
+      } else if (resp.status == 202) {
+        RED.notify("Successfully refreshed: " + node.name, "success");
+      } else {
+        RED.notify("<strong>Error</strong>: unexpected response: (" + resp.status + ") " + resp.response, "error");
+      }
+    });
+  }
+
+  function clearChart (node) {
+    var elemid = 'chart-' + node.id.replace('.', '-');
+    $("#" + elemid).parents('.chart-box').remove();
+    var n = RED.nodes.node(node.id);
+    n.highlighted = false;
+    n.dirty = true;
+    RED.view.redraw();
+  }
+</script>
+
+<style>
+  #chart-content {
+    width: 100%;
+  }
+
+  #chart-toolbar {
+    padding: 3px 10px;
+    height: 24px;
+    background: #f3f3f3;
+  }
+
+  .chart-box {
+    cursor: pointer;
+    position: relative;
+    padding: 15px 0px 30px 0px;
+    border-bottom: 1px solid #eee;
+    border-left: 8px solid #eee;
+    border-right: 8px solid #eee;
+  }
+
+  .legend {
+    position: absolute;
+    bottom: 5px;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+
+  .node-input-route-handle {
+    color: #eee;
+    cursor: move;
+    margin-right: 5px;
+  }
+
+  .route-container {
+    background: #fff;
+    margin:0;
+    padding:8px 0px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .finalspan {
+    float: right;
+    margin-right: 10px;
+  }
+
+  .editor-button {
+    style: margin-top: 7px;
+    margin-left: 5px;
+  }
+
+  .node-input-route-key, .node-input-route-legend {
+    margin-left: 10px;
+    width: 150px !important;
+  }
+
+  .panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+</style>

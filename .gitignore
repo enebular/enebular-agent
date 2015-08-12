@@ -8,3 +8,8 @@
 node_modules
 .npm
 .profile
+.config.json
+.sessions.json
+flows_*
+npm-debug.log
+lib

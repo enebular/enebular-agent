@@ -4,16 +4,21 @@ var settings = {
   debugMaxLength: 10000000,
   autoInstallModules: true,
   httpAdminRoot: '/red',
-  httpNodeRoot: '/',
+  httpNodeRoot: '/red',
   nodesDir: path.join(__dirname, 'nodes'),
-  storageModule: require('./mongostorage'),
-  mongoAppname: 'enebular',
-  mongoUrl: process.env.MONGOLAB_URI,
   functionGlobalContext: { },    // enables global context
   httpNodeCors: {
     origin: "*",
     methods: "GET,PUT,POST,DELETE"
   }
 };
+
+if (process.env.MONGO_URI) {
+  settings.storageModule = require('./mongostorage');
+  settings.mongoUrl = process.env.MONGO_URI;
+  settings.mongoAppname = 'enebular';
+} else {
+  settings.userDir = path.join(__dirname);
+}
 
 module.exports = settings;
