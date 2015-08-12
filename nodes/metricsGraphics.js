@@ -45,6 +45,7 @@
           chartOption: {
             title: node.name || 'metrics graphics',
             area: false,
+            transition_on_update: false,
             full_width: true,
             x_accessor: 'date',
             y_accessor: keys,
