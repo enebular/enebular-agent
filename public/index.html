@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="vendor/vendor.css">
 <link rel="stylesheet" href="red/style.min.css">
 <link rel="stylesheet" href="metricsgraphics.css">
+<link rel="stylesheet" href="enebular-nodered.css">
 </head>
 <body spellcheck="false">
 <div id="header">
@@ -159,8 +160,19 @@
 
 <script type="text/x-red" data-template-name="export-library-dialog">
     <div class="form-row">
-        <label for="node-input-filename" ><i class="fa fa-file"></i> Filename:</label>
-        <input type="text" id="node-input-filename" placeholder="Filename">
+        <label for="node-input-filename">Title:</label><br>
+        <input type="text" class="enebular-node-input" id="node-input-filename" placeholder="Give your flow a short, descriptive title."><br>
+        <label for="node-input-description" style="margin-top: 20px;">Description:</label><br>
+        <span style="display: inline-block; position: relative; margin-bottom: 20px;">
+            <textarea class="enebular-node-input" rows="10" id="node-input-description" placeholder="Describe what the flow does and how it is used. You can use markdown here. Use the preview tab to see how it looks." style="margin-bottom: 0"></textarea>
+            <div class="enebular-node-preview" id="enebular-node-preview"></div>
+            <div class="enebular-node-tab">
+                <div class="enebular-node-tabItem is-open" id="enebular-node-tabMarkdown">Markdown</div>
+                <div class="enebular-node-tabItem" id="enebular-node-tabPreview">Preview</div>
+            </div>
+        </span><br>
+        <label for="node-input-tags">Tags:</label><br>
+        <input type="text" class="enebular-node-input" id="node-input-tags" placeholder="Add comma- or space-separated some tags. (e.g. 'Raspberry_Pi, S3')">
     </div>
 </script>
 
@@ -173,10 +185,10 @@
 
 <script src="d3.min.js"></script>
 <script src="metricsgraphics.min.js"></script>
+<script src="markdown-it.min.js"></script>
 <script src="vendor/vendor.js"></script>
 <script src="vendor/ace/ace.js"></script>
 <script src="vendor/ace/ext-language_tools.js"></script>
 <script src="red/red.min.js"></script>
-
 </body>
 </html>

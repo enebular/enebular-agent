@@ -1,0 +1,55 @@
+/*
+ *
+ *  enebularが新しく追加したことがわかるようにclass名の接頭辞は'enebular-'にする
+ *
+ **/
+
+
+.enebular-node-input.enebular-node-input{
+  margin-bottom: 12px;
+  min-width: 650px;
+  max-width: 750px;
+  border: 1px solid #ccc;
+  box-shadow: none;
+}
+.enebular-node-input.enebular-node-input:focus{
+  box-shadow: none;
+  border: 1px solid #ccc;
+}
+
+.enebular-node-tab{
+  position: absolute;
+  top: -38px;
+  right: 0;
+}
+.enebular-node-tabItem{
+  cursor: pointer;
+  display: inline-block;
+  background-color: #fff;
+  padding: 10px 20px;
+  background-color: #f6f6f6;
+  border: 1px solid #ccc;
+  border-radius: 3px 3px 0 0;
+}
+.enebular-node-tabItem.is-open{
+  background-color: #fff;
+  border-bottom: 1px solid #fff;
+}
+.enebular-node-preview{
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  display: none;
+}
+.enebular-node-preview.is-open{
+  display: block;
+}
