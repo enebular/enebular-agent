@@ -5743,9 +5743,11 @@ RED.editor = (function() {
                         } else if (/Export nodes to library/.test($( "#dialog" ).dialog("option","title"))) {
                             //TODO: move this to RED.library
                             var flowName = $("#node-input-filename").val();
+                            /* ここからenebularが新しく追加したコード */
                             var flowDescription = $("#node-input-description").val();
                             var flowTags = $("#node-input-tags").val();
                             var flowTagArray = flowTags.split(/[ ,]+/);
+                            /* ここまで */
 
                             // enebular TODO: name, description, tagsからFlowリストに追加する
 
@@ -6983,6 +6985,7 @@ RED.library = (function() {
         $("#node-input-filename").attr('nodes',JSON.stringify(nns));
         $( "#dialog" ).dialog("option","title","Export nodes to library").dialog( "open" );
 
+        /* ここからenebularが新しく追加したコード */
         var md = window.markdownit();
 
         $('#enebular-node-tabMarkdown').click(function(e){
@@ -6999,6 +7002,7 @@ RED.library = (function() {
 
             $('#enebular-node-preview').html(htmlText);
         });
+        /* ここまで */
     }
 
     return {
