@@ -190,5 +190,89 @@
 <script src="vendor/ace/ace.js"></script>
 <script src="vendor/ace/ext-language_tools.js"></script>
 <script src="red/red.min.js"></script>
+<script>
+var Hook=function(){
+    var old;
+    this.addHook=function(obj,method,before,after){
+        old=obj[method];
+        obj[method]=function(){
+            before&&before.apply(this,arguments);
+            var ret=old.apply(this,arguments);
+            after&&after.apply(this,arguments,ret);
+            return ret;
+        }
+    }
+    this.removeHook=function(obj,method){
+        obj[method]=old;
+    }
+}
+
+var hook = new Hook();
+
+hook.addHook(RED.user, 'init', function() {}, function() {
+    RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "Enebular", onselect: onselectHandler });
+
+    function onselectHandler(){
+        var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
+        $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
+        $("#node-input-filename").attr('nodes',JSON.stringify(nns));
+
+        $( "#dialog" ).dialog("option",{
+            title: "Export nodes to enebular",
+            buttons: [
+                {
+                    id: "node-dialog-ok",
+                    text: "Ok",
+                    click: function() {
+
+                        var flowName = $("#node-input-filename").val();
+                        var flowDescription = $("#node-input-description").val();
+                        var flowTags = $("#node-input-tags").val();
+                        var flowTagArray = flowTags.split(/[ ,]+/);
+
+                        if (!/^\s*$/.test(flowName) && !!flowDescription && !!flowTags) {
+                            window.parent.postMessage({
+                                title : flowName,
+                                description : flowDescription,
+                                tags : flowTagArray,
+                                body : $("#node-input-filename").attr('nodes')
+                            }, "http://localhost:7000");
+                        }
+                        $( this ).dialog( "close" );
+                    }
+                },
+                {
+                    id: "node-dialog-cancel",
+                    text: "Cancel",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        }).dialog( "open" );
+
+        var md = window.markdownit();
+
+        $('#enebular-node-tabMarkdown').click(function(e){
+            $(this).addClass('is-open');
+            $('#enebular-node-tabPreview').removeClass('is-open');
+            $('#enebular-node-preview').removeClass('is-open');
+        });
+        $('#enebular-node-tabPreview').click(function(){
+            $(this).addClass('is-open');
+            $('#enebular-node-tabMarkdown').removeClass('is-open');
+            $('#enebular-node-preview').addClass('is-open');
+
+            var htmlText = !!($('#node-input-description').val()) ? md.render($('#node-input-description').val().trim()) : '<span class="muted">Nothing to preview</span>'
+
+            $('#enebular-node-preview').html(htmlText);
+        });
+    }
+});
+
+
+
+
+</script>
 </body>
 </html>
