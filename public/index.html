@@ -191,19 +191,21 @@
 <script src="vendor/ace/ext-language_tools.js"></script>
 <script src="red/red.min.js"></script>
 <script>
-var Hook=function(){
+var ENEBULAR_URL = "http://localhost:7000/";
+
+var Hook = function(){
     var old;
-    this.addHook=function(obj,method,before,after){
-        old=obj[method];
-        obj[method]=function(){
-            before&&before.apply(this,arguments);
-            var ret=old.apply(this,arguments);
-            after&&after.apply(this,arguments,ret);
+    this.addHook = function(obj, method, before, after){
+        old = obj[method];
+        obj[method] = function(){
+            before && before.apply(this,arguments);
+            var ret = old.apply(this,arguments);
+            after && after.apply(this, arguments, ret);
             return ret;
         }
     }
-    this.removeHook=function(obj,method){
-        obj[method]=old;
+    this.removeHook = function(obj, method){
+        obj[method] = old;
     }
 }
 
@@ -236,7 +238,7 @@ hook.addHook(RED.user, 'init', function() {}, function() {
                                 description : flowDescription,
                                 tags : flowTagArray,
                                 body : $("#node-input-filename").attr('nodes')
-                            }, "http://localhost:7000");
+                            }, ENEBULAR_URL);
                         }
                         $( this ).dialog( "close" );
                     }
