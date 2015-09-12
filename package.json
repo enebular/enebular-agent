@@ -5,8 +5,7 @@
     "node": "0.10.x"
   },
   "scripts": {
-    "start": "node app.js",
-    "build": "uglifyjs ./public/red/red.js -o ./public/red/red.min.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "bcryptjs": "~2.x",
@@ -19,7 +18,6 @@
     "node-red-contrib-ds18b20": "~0.0.3",
     "node-red-contrib-td": "~0.0.8",
     "node-red-node-pusher": "~0.0.2",
-    "uglify-js": "^2.4.24",
     "when": "~3.x"
   }
 }
