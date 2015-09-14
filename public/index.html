@@ -190,5 +190,41 @@
 <script src="vendor/ace/ace.js"></script>
 <script src="vendor/ace/ext-language_tools.js"></script>
 <script src="red/red.min.js"></script>
+<script>
+/*
+    setInterval(function() {
+        sendMessageToEnebular({
+            title: 'title',
+            description: 'description',
+            tags: 'tags'
+        });
+    }, 1000);
+*/
+var Hook=function(){
+    var old;
+    this.addHook=function(obj,method,before,after){
+        old=obj[method];
+        obj[method]=function(){
+            before&&before.apply(this,arguments);
+            var ret=old.apply(this,arguments);
+            after&&after.apply(this,arguments,ret);
+            return ret;
+        }
+    }
+    this.removeHook=function(obj,method){
+        obj[method]=old;
+    }
+}
+
+var h=new Hook();
+h.addHook(RED.clipboard, 'init', function() {}, function() {
+    console.log("a")
+    RED.menu.addItem("menu-item-export", {id: 'menu-item-export-enebular', label: "Enebular"})
+});
+    window.sendMessageToEnebular = function(data) {
+        //console.log(data);
+        window.parent.postMessage(data, "http://localhost:7000");
+    }
+</script>
 </body>
 </html>
