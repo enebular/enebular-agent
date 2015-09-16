@@ -21,4 +21,4 @@
 
 ## 2. テストスタート
 
-    AUDIENCE=http://localhost:5000 PUBLIC_KEY_PATH=keys/public.pem ISSUER=http://localhost node app.js
+    AUDIENCE=http://localhost:5000 PUBLIC_KEY_PATH=keys/public.pem ISSUER=http://localhost:7000 node app.js

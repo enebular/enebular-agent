@@ -193,6 +193,11 @@
 <script>
 var ENEBULAR_URL = "http://localhost:7000/";
 
+$.get("/sys/enebularurl", function(data) {
+    ENEBULAR_URL = data;
+    console.log("issuer", data);
+}, "json");
+
 var Hook = function(){
     var old;
     this.addHook = function(obj, method, before, after){
@@ -210,9 +215,9 @@ var Hook = function(){
 }
 
 var hook = new Hook();
-
 hook.addHook(RED.user, 'init', function() {}, function() {
     RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "Enebular", onselect: onselectHandler });
+});
 
     function onselectHandler(){
         var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
@@ -272,7 +277,6 @@ hook.addHook(RED.user, 'init', function() {}, function() {
             $('#enebular-node-preview').html(htmlText);
         });
     }
-});
 
 
 
