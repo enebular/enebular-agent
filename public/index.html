@@ -191,40 +191,97 @@
 <script src="vendor/ace/ext-language_tools.js"></script>
 <script src="red/red.min.js"></script>
 <script>
-/*
-    setInterval(function() {
-        sendMessageToEnebular({
-            title: 'title',
-            description: 'description',
-            tags: 'tags'
-        });
-    }, 1000);
-*/
-var Hook=function(){
+
+var ENEBULAR_URL = "http://localhost:7000/";
+
+$.get("/sys/enebularurl", function(data) {
+    ENEBULAR_URL = data;
+    console.log("issuer", data);
+}, "json");
+
+var Hook = function(){
     var old;
-    this.addHook=function(obj,method,before,after){
-        old=obj[method];
-        obj[method]=function(){
-            before&&before.apply(this,arguments);
-            var ret=old.apply(this,arguments);
-            after&&after.apply(this,arguments,ret);
+    this.addHook = function(obj, method, before, after){
+        old = obj[method];
+        obj[method] = function(){
+            before && before.apply(this,arguments);
+            var ret = old.apply(this,arguments);
+            after && after.apply(this, arguments, ret);
             return ret;
         }
     }
-    this.removeHook=function(obj,method){
-        obj[method]=old;
+    this.removeHook = function(obj, method){
+        obj[method] = old;
     }
 }
 
-var h=new Hook();
-h.addHook(RED.clipboard, 'init', function() {}, function() {
-    console.log("a")
-    RED.menu.addItem("menu-item-export", {id: 'menu-item-export-enebular', label: "Enebular"})
+var hook = new Hook();
+hook.addHook(RED.user, 'init', function() {}, function() {
+    RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "Enebular", onselect: onselectHandler });
 });
-    window.sendMessageToEnebular = function(data) {
-        //console.log(data);
-        window.parent.postMessage(data, "http://localhost:7000");
+
+    function onselectHandler(){
+        var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
+        $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
+        $("#node-input-filename").attr('nodes',JSON.stringify(nns));
+
+        $( "#dialog" ).dialog("option",{
+            title: "Export nodes to enebular",
+            buttons: [
+                {
+                    id: "node-dialog-ok",
+                    text: "Ok",
+                    click: function() {
+
+                        var flowName = $("#node-input-filename").val();
+                        var flowDescription = $("#node-input-description").val() || '';
+                        var flowTags = $("#node-input-tags").val() || '';
+                        var flowTagArray = flowTags.split(/[ ,]+/);
+
+                        if (!/^\s*$/.test(flowName)) {
+                            window.parent.postMessage({
+                                title : flowName,
+                                description : flowDescription,
+                                tags : flowTagArray,
+                                body : $("#node-input-filename").attr('nodes')
+                            }, ENEBULAR_URL);
+                            $( this ).dialog( "close" );
+                        } else {
+                            window.alert('Please enter a title.');
+                        }
+                    }
+                },
+                {
+                    id: "node-dialog-cancel",
+                    text: "Cancel",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        }).dialog( "open" );
+
+        var md = window.markdownit();
+
+        $('#enebular-node-tabMarkdown').click(function(e){
+            $(this).addClass('is-open');
+            $('#enebular-node-tabPreview').removeClass('is-open');
+            $('#enebular-node-preview').removeClass('is-open');
+        });
+        $('#enebular-node-tabPreview').click(function(){
+            $(this).addClass('is-open');
+            $('#enebular-node-tabMarkdown').removeClass('is-open');
+            $('#enebular-node-preview').addClass('is-open');
+
+            var htmlText = !!($('#node-input-description').val()) ? md.render($('#node-input-description').val().trim()) : '<span class="muted">Nothing to preview</span>'
+
+            $('#enebular-node-preview').html(htmlText);
+        });
     }
+
+
+
+
 </script>
 </body>
 </html>

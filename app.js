@@ -30,6 +30,8 @@ if (process.env.PUBLIC_KEY_PATH) {
 
 app.use('/red', express.static('public'));
 
+app.get('/sys/enebularurl', function(req, res) {res.json(process.env.ISSUER);});
+
 RED.init(server, settings);
 app.use(settings.httpAdminRoot, RED.httpAdmin);
 app.use(settings.httpNodeRoot, RED.httpNode);
