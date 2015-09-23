@@ -1,12 +1,39 @@
 var fs = require('fs');
 var path = require('path');
 var http = require('http');
+var https = require('https');
+var fs = require('fs');
 var express = require('express');
 var session = require('express-session');
 var RED = require('node-red');
 var settings = require('./settings');
 var app = express();
-var server = http.createServer(app);
+
+var server = null;
+if(process.env.AUDIENCE.match("^https://localhost")) {
+  server = createHttpsServer();
+}else{
+  server = createHttpServer();
+}
+
+function createHttpServer() {
+  console.log("Create Normal HTTP Server");
+  return http.createServer(app);
+}
+
+function createHttpsServer() {
+  console.log("Create Self Signed HTTPS Server");
+  var options = {
+    key: fs.readFileSync(__dirname + '/ssl/localhost.key'),
+    cert: fs.readFileSync(__dirname + '/ssl/localhost.crt'),
+    ciphers: 'ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES256-SHA384',
+    honorCipherOrder: true,
+    secureProtocol: 'TLSv1_2_method',
+    requestCert: false,
+    rejectUnauthorized: false
+  };
+  return https.createServer(options, app);
+}
 
 app.use(session({ secret: '4r13ysgyYD' }));
 
