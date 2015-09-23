@@ -37,3 +37,6 @@ var port = process.env.PORT || 5000;
 server.listen(port);
 
 RED.start();
+
+var meshbluServer = require('./meshblu');
+meshbluServer.start();
