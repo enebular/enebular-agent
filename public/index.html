@@ -220,6 +220,27 @@ hook.addHook(RED.user, 'init', function() {}, function() {
     RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "Enebular", onselect: onselectHandler });
 });
 
+function EnebularTransporter() {
+    var current_timer = null;
+    window.addEventListener('message', function(e) {
+        switch(e.data.event) {
+            case 'flowadded':
+                clearTimeout(current_timer);
+                break;
+        }
+    });
+    return {
+        addFlow : function(body, onError) {
+            window.parent.postMessage({
+                event : 'flowadded',
+                body : body
+            }, ENEBULAR_URL);
+            current_timer = setTimeout(onError, 3000);
+        },
+    }
+}
+var enebularTransporter = new EnebularTransporter();
+
     function onselectHandler(){
         var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
         $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
@@ -237,14 +258,17 @@ hook.addHook(RED.user, 'init', function() {}, function() {
                         var flowDescription = $("#node-input-description").val() || '';
                         var flowTags = $("#node-input-tags").val() || '';
                         var flowTagArray = flowTags.split(/[ ,]+/);
+                        var flowBody = $("#node-input-filename").attr('nodes');
 
                         if (!/^\s*$/.test(flowName)) {
-                            window.parent.postMessage({
-                                title : flowName,
-                                description : flowDescription,
-                                tags : flowTagArray,
-                                body : $("#node-input-filename").attr('nodes')
-                            }, ENEBULAR_URL);
+                            enebularTransporter.addFlow({
+                                    title : flowName,
+                                    description : flowDescription,
+                                    tags : flowTagArray,
+                                    body : flowBody
+                            }, function() {
+                                window.alert('Flowを追加できませんでした。設定を見直してください。');
+                            });
                             $( this ).dialog( "close" );
                         } else {
                             window.alert('Please enter a title.');
