@@ -192,6 +192,30 @@
 <script src="red/red.min.js"></script>
 <script>
 
+window.document.onkeydown = keys;
+
+function keys(event){
+
+  // クリックされたキーのコード
+  var keyCode = event.keyCode;
+  // キーイベントが発生した対象のオブジェクト
+  var obj = event.target;
+
+  console.log('event.target is ::', obj, obj.tagName);
+
+  // バックスペースキーを制御する
+  if(keyCode == 8){
+    // テキストボックス／テキストエリアを制御する
+    if((obj.tagName == "INPUT") || obj.tagName == "TEXTAREA"){
+      // 入力できる場合は制御しない
+      if(!obj.readOnly && !obj.disabled){
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
 var ENEBULAR_URL = "http://localhost:7000/";
 
 $.get("/sys/enebularurl", function(data) {
