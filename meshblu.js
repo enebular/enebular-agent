@@ -1,6 +1,9 @@
 'use strict';
 
 var config = {
+  mongo: {
+    databaseUrl: process.env.MESHBLU_MONGODB_URI
+  },
   port: parseInt(process.env.MESHBLU_HTTP_PORT) || 3001,
   uuid: process.env.UUID,
   token: process.env.TOKEN,
