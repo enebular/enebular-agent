@@ -230,16 +230,22 @@ function EnebularTransporter() {
         }
     });
     return {
+        load : function() {
+            window.parent.postMessage({
+                event : 'loaded',
+            }, ENEBULAR_URL);
+        },
         addFlow : function(body, onError) {
             window.parent.postMessage({
                 event : 'flowadded',
                 body : body
             }, ENEBULAR_URL);
             current_timer = setTimeout(onError, 3000);
-        },
+        }
     }
 }
 var enebularTransporter = new EnebularTransporter();
+enebularTransporter.load();
 
     function onselectHandler(){
         var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
