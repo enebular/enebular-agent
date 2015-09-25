@@ -1,0 +1,90 @@
+<div>
+	<div class="item">
+		<span>userId</span>:
+		<input id="userId" class="form-item" type="text"></input>
+		<button id="sendBtn">送信</button>
+	</div>
+	<div class="item">
+		<span>agentId</span>:<input id="agentId" class="form-item" readonly="readonly">
+	</div>
+</div>
+<style>
+	.item {
+		padding: 10px;
+	}
+	.item button{
+		font-size: 18px;
+	}
+	.form-item {
+		font-size: 18px;
+		width: 380px;
+	}
+</style>
+<script>
+window.addEventListener('load', function() {
+	var sendBtn = document.getElementById('sendBtn');
+	var userId = document.getElementById('userId');
+	var agentId = document.getElementById('agentId');
+	sendBtn.addEventListener('click', function(e) {
+		request('POST', '/sys/user_id', {user_id:userId.value}, showAgentId);
+	});
+	request('GET', '/sys/user_id', {}, function(err, data) {
+		if(err || !data.user_id) {
+			return;
+		}
+		userId.value = data.user_id;
+		sendBtn.textContent = '編集';
+		showAgentId();
+	});
+	function showAgentId() {
+		request('GET', '/sys/agentid', {}, function(err, data) {
+			agentId.value = data.agentid;
+		});
+	}
+});
+function request(method, path, params, callback) {
+	var params_str = querystring(params)
+	var url = path;
+	if(method == 'GET') {
+		url += '?' + params_str;
+	}
+	var xhr = createCORSRequest(method , url);
+	xhr.withCredentials = true;
+	xhr.onload = function() {
+		decoded = "";
+		try{
+			var parsed = JSON.parse(xhr.responseText);
+    		callback(null, parsed);
+		}catch(e){
+    		callback(null, JSON.parse(xhr.responseText));
+		}
+	}
+	xhr.onerror = function() {
+		callback(xhr.statusText || 'unknown error');
+	}
+	xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhr.send(params_str);
+}
+
+function createCORSRequest(method, url) {
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
+        xhr.open(method, url, true);
+    } else if (typeof XDomainRequest != "undefined") {
+        xhr = new XDomainRequest();
+        xhr.open(method, url);
+    } else {
+        xhr = null;
+    }
+    return xhr;
+}
+
+function querystring(params) {
+	var str_arr = [];
+	for(k in params) {
+		str_arr.push(k + '=' + params[k]);
+	}
+	return str_arr.join('&');
+}
+
+</script>

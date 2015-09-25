@@ -194,9 +194,13 @@
 
 var ENEBULAR_URL = "http://localhost:7000/";
 
+var enebularTransporter = new EnebularTransporter();
+
 $.get("/sys/enebularurl", function(data) {
     ENEBULAR_URL = data;
     console.log("issuer", data);
+    enebularTransporter.load();
+
 }, "json");
 
 var Hook = function(){
@@ -244,8 +248,6 @@ function EnebularTransporter() {
         }
     }
 }
-var enebularTransporter = new EnebularTransporter();
-enebularTransporter.load();
 
     function onselectHandler(){
         var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
