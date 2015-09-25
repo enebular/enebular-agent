@@ -1,0 +1,18 @@
+<%= message %>
+<script src="/jquery-1.11.3.min.js"></script>
+<script>
+
+var ENEBULAR_URL = "http://localhost:7000/";
+
+
+window.addEventListener('load', function() {
+    $.get("/sys/enebularurl", function(data) {
+        ENEBULAR_URL = data;
+        window.parent.postMessage({
+            event : 'loaded',
+        }, ENEBULAR_URL);
+    }, "json");
+});
+
+
+</script>

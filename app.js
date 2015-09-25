@@ -7,6 +7,7 @@ var express = require('express');
 var session = require('express-session');
 var RED = require('node-red');
 var settings = require('./settings');
+var bodyParser = require('body-parser');
 var app = express();
 
 var server = null;
@@ -35,14 +36,22 @@ function createHttpsServer() {
   return https.createServer(options, app);
 }
 
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
 app.use(session({ secret: '4r13ysgyYD' }));
+
+var agentIdUtil = require('./server/agentid');
+
+agentIdUtil.init();
 
 var JWTAuth = require('./auth/jwt');
 
 if (process.env.PUBLIC_KEY_PATH) {
-  app.use(JWTAuth(process.env.PUBLIC_KEY_PATH, {
+  app.all("/red/*", JWTAuth(process.env.PUBLIC_KEY_PATH, {
     issuer: process.env.ISSUER,
-    audience: process.env.AUDIENCE,
+    audience: agentIdUtil.getAgentId()
   }));
 } else if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
   settings.adminAuth = {
@@ -55,8 +64,26 @@ if (process.env.PUBLIC_KEY_PATH) {
   };
 }
 
+var store = require('./store');
 app.use('/red', express.static('public'));
+app.use('/', express.static('top'));
+app.set('view engine', 'ejs');
 
+
+app.post('/sys/user_id', function(req, res) {
+  var user_id = req.param('user_id');
+  store.set('user_id', user_id, function(err) {
+    res.json({err:err});
+  });
+});
+app.get('/sys/agentid', function(req, res) {
+  res.json({agentid:agentIdUtil.getAgentId()});
+});
+app.get('/sys/user_id', function(req, res) {
+  store.get('user_id', function(err, user_id) {
+    res.json({user_id:user_id});
+  });
+});
 app.get('/sys/enebularurl', function(req, res) {res.json(process.env.ISSUER);});
 
 RED.init(server, settings);

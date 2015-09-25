@@ -13,3 +13,4 @@ node_modules
 flows_*
 npm-debug.log
 lib
+data/*
