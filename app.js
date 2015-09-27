@@ -42,16 +42,19 @@ app.use(bodyParser.urlencoded({
 
 app.use(session({ secret: '4r13ysgyYD' }));
 
+var store = require('./store');
 var agentIdUtil = require('./server/agentid');
 
-agentIdUtil.init();
+store.init(function(err) {
+  if(err) throw err;
+  agentIdUtil.init();
+});
 
 var JWTAuth = require('./auth/jwt');
 
 if (process.env.PUBLIC_KEY_PATH) {
   app.all("/red/*", JWTAuth(process.env.PUBLIC_KEY_PATH, {
-    issuer: process.env.ISSUER,
-    audience: agentIdUtil.getAgentId()
+    issuer: process.env.ISSUER
   }));
 } else if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
   settings.adminAuth = {
@@ -64,7 +67,6 @@ if (process.env.PUBLIC_KEY_PATH) {
   };
 }
 
-var store = require('./store');
 app.use('/red', express.static('public'));
 app.use('/', express.static('top'));
 app.set('view engine', 'ejs');

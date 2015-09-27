@@ -13,18 +13,20 @@ module.exports = function(publicKeyPath, options) {
       var token = req.query.auth_token;
       if (token) {
         console.log('token=', token);
-        jwt.verify(token, publicKey, options, function(err, identity) {
-          if (err) {
-            return res.status(401).render('../views/error', {message:err.message});
-          }
-          console.log('Verified identity=', identity);
-          req.session.identity = identity;
-          store.get('user_id', function(err, user_id) {
-            if(user_id == identity.sub) {
-              res.redirect(req.path);
-            }else{
-              res.status(401).render('../views/error', {message:'Unauthorized: userId does not match.'});
+        store.get('agentid', function(err, agent_id) {
+          options.audience = agent_id
+          jwt.verify(token, publicKey, options, function(err, identity) {
+            if (err) {
+              return res.status(401).render('../views/error', {message:err.message});
             }
+            console.log('Verified identity=', identity);
+            req.session.identity = identity;
+            store.get('user_id', function(err, user_id) {
+              if(user_id != identity.sub) {
+                res.status(401).render('../views/error', {message:'Unauthorized: userId does not match.'});
+              }
+              res.redirect(req.path);
+            });
           });
         });
       } else {
