@@ -22,8 +22,5 @@ module.exports = {
 			console.log('agent_id', agent_id);
 		});
 
-	},
-	getAgentId : function() {
-		return this.agent_id;
 	}
 }

@@ -79,7 +79,9 @@ app.post('/sys/user_id', function(req, res) {
   });
 });
 app.get('/sys/agentid', function(req, res) {
-  res.json({agentid:agentIdUtil.getAgentId()});
+  store.get('agentid', function(err, agentid) {
+    res.json({agentid:agentid});
+  });
 });
 app.get('/sys/user_id', function(req, res) {
   store.get('user_id', function(err, user_id) {
