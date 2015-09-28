@@ -11,7 +11,7 @@ var bodyParser = require('body-parser');
 var app = express();
 
 var server = null;
-if(process.env.AUDIENCE.match("^https://localhost")) {
+if(process.env.REDIRECT_URI.match("^https://localhost")) {
   server = createHttpsServer();
 }else{
   server = createHttpServer();
