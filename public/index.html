@@ -250,9 +250,11 @@ hook.addHook(RED.user, 'init', function() {}, function() {
 
 function EnebularTransporter() {
     var current_timer = null;
+    var onSuccess = null;
     window.addEventListener('message', function(e) {
         switch(e.data.event) {
             case 'flowadded':
+                if(onSuccess) onSuccess();
                 clearTimeout(current_timer);
                 break;
         }
@@ -263,11 +265,12 @@ function EnebularTransporter() {
                 event : 'loaded',
             }, ENEBULAR_URL);
         },
-        addFlow : function(body, onError) {
+        addFlow : function(body, _onSuccess, onError) {
             window.parent.postMessage({
                 event : 'flowadded',
                 body : body
             }, ENEBULAR_URL);
+            onSuccess = _onSuccess;
             current_timer = setTimeout(onError, 3000);
         }
     }
@@ -298,8 +301,11 @@ function EnebularTransporter() {
                                     description : flowDescription,
                                     tags : flowTagArray,
                                     body : flowBody
-                            }, function() {
-                                window.alert('Flowを追加できませんでした。設定を見直してください。');
+                            },
+                            function() {
+                                RED.notify("Saved flow to enebular", "success");
+                            },function() {
+                                RED.notify("Failed to save flow to enebular", "error");
                             });
                             $( this ).dialog( "close" );
                         } else {
