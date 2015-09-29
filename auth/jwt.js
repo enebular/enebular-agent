@@ -24,8 +24,9 @@ module.exports = function(publicKeyPath, options) {
             store.get('user_id', function(err, user_id) {
               if(user_id != identity.sub) {
                 res.status(401).render('../views/error', {message:'Unauthorized: userId does not match.'});
+              }else{
+                res.redirect(req.path);
               }
-              res.redirect(req.path);
             });
           });
         });
