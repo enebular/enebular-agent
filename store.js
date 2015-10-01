@@ -20,7 +20,13 @@ function FileStore() {
 		},
 		get : function(key, cb) {
 			var dataPath = path.join(dataDir, key);
-			fs.readFile(dataPath, {encoding:'utf8'}, cb);
+			fs.readFile(dataPath, {encoding:'utf8'}, function(err, data) {
+				if(err) {
+					cb(null);
+					return;
+				}
+				cb(null, data);
+			});
 		}
 	}
 }
