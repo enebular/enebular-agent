@@ -33,7 +33,8 @@ window.addEventListener('load', function() {
 			return;
 		}
 		userId.value = data.user_id;
-		sendBtn.textContent = '編集';
+		sendBtn.textContent = '編集不可';
+		userId.readOnly = true;
 		showAgentId();
 	});
 	function showAgentId() {

@@ -74,8 +74,18 @@ app.set('view engine', 'ejs');
 
 app.post('/sys/user_id', function(req, res) {
   var user_id = req.param('user_id');
-  store.set('user_id', user_id, function(err) {
-    res.json({err:err});
+  store.get('user_id', function(err, old_user_id) {
+    if(err) {
+      res.json({err:err});
+      return;
+    }
+    if(old_user_id) {
+      res.json({err:"user_id was already registerd."});
+      return;
+    }
+    store.set('user_id', user_id, function(err) {
+      res.json({err:err});
+    });
   });
 });
 app.get('/sys/agentid', function(req, res) {
