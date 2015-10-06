@@ -19,12 +19,12 @@ module.exports = function(publicKeyPath, options) {
             if (err) {
               return res.status(401).render('../views/error', {message:err.message});
             }
-            console.log('Verified identity=', identity);
-            req.session.identity = identity;
             store.get('user_id', function(err, user_id) {
               if(user_id != identity.sub) {
                 res.status(401).render('../views/error', {message:'Unauthorized: userId does not match.'});
               }else{
+                console.log('Verified identity=', identity);
+                req.session.identity = identity;
                 res.redirect(req.path);
               }
             });
