@@ -1,5 +1,6 @@
 <div id="loading">Loading...</div>
-<div id="wrapper" class="hidden">
+<div id="install-message"></div>
+<div id="wrapper">
 	<div class="item">
 		<span>userId</span>:
 		<input id="userId" class="form-item" type="text"></input>
@@ -9,6 +10,7 @@
 		<span>agentId</span>:<input id="agentId" class="form-item" readonly="readonly">
 	</div>
 </div>
+<div id="message" class="error"></div>
 <style>
 	.hidden {
 		display: none;
@@ -23,17 +25,24 @@
 		font-size: 18px;
 		width: 380px;
 	}
+	.error {
+		color: #f00;
+	}
 </style>
 <script>
 window.addEventListener('load', function() {
 	var wrapper = document.getElementById('wrapper');
 	request('GET', '/sys/user_id', {}, function(err, data) {
 		loaded();
-		if(err || !data.user_id) {
-			start();
+		if(err) {
+			error(err);
 			return;
 		}
-		wrapper.textContent = "インストール済みです。";
+		if(!data.user_id) {
+			not_installed_view();
+		}else{
+			installed_view();
+		}
 	});
 });
 
@@ -43,19 +52,44 @@ function loaded() {
 	wrapper.className = '';
 	loading.className = 'hidden';
 }
-function start() {
+function error(text) {
+	var message = document.getElementById('message');
+	message.textContent = text;
+	console.error(text);
+}
+
+function not_installed_view() {
 	var sendBtn = document.getElementById('sendBtn');
 	var userId = document.getElementById('userId');
-	var agentId = document.getElementById('agentId');
 	sendBtn.addEventListener('click', function(e) {
-		request('POST', '/sys/user_id', {user_id:userId.value}, showAgentId);
-	});
-	
-	function showAgentId() {
-		request('GET', '/sys/agentid', {}, function(err, data) {
-			agentId.value = data.agentid;
+		var user_id = userId.value;
+		request('POST', '/sys/user_id', {user_id : user_id}, function() {
+			showAgentId(user_id);
 		});
-	}
+	});
+}
+
+function installed_view() {
+	var install_message = document.getElementById('install-message');
+	install_message.textContent = "インストール済みです。";
+	var sendBtn = document.getElementById('sendBtn');
+	var userId = document.getElementById('userId');
+	sendBtn.addEventListener('click', function(e) {
+		var user_id = userId.value;
+		showAgentId(user_id);
+	});
+
+}
+
+function showAgentId(user_id) {
+	var agentId = document.getElementById('agentId');
+	request('GET', '/sys/agentid', {user_id:user_id}, function(err, data) {
+		if(err) {
+			error(err);
+			return;
+		}
+		agentId.value = data.agentid;
+	});
 }
 
 function request(method, path, params, callback) {
@@ -67,13 +101,8 @@ function request(method, path, params, callback) {
 	var xhr = createCORSRequest(method , url);
 	xhr.withCredentials = true;
 	xhr.onload = function() {
-		decoded = "";
-		try{
-			var parsed = JSON.parse(xhr.responseText);
-    		callback(null, parsed);
-		}catch(e){
-    		callback(null, JSON.parse(xhr.responseText));
-		}
+		var data = JSON.parse(xhr.responseText);
+		callback(data.err, data.content);
 	}
 	xhr.onerror = function() {
 		callback(xhr.statusText || 'unknown error');

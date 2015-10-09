@@ -22,7 +22,11 @@ function FileStore() {
 			var dataPath = path.join(dataDir, key);
 			fs.readFile(dataPath, {encoding:'utf8'}, function(err, data) {
 				if(err) {
-					cb(null);
+					if(err.code == "ENOENT") {
+						cb(null);
+					}else{
+						cb(err);
+					}
 					return;
 				}
 				cb(null, data);

@@ -76,7 +76,7 @@ app.post('/sys/user_id', function(req, res) {
   var user_id = req.param('user_id');
   store.get('user_id', function(err, old_user_id) {
     if(err) {
-      res.json({err:err});
+      res.json({err:err.message});
       return;
     }
     if(old_user_id) {
@@ -89,13 +89,33 @@ app.post('/sys/user_id', function(req, res) {
   });
 });
 app.get('/sys/agentid', function(req, res) {
-  store.get('agentid', function(err, agentid) {
-    res.json({agentid:agentid});
+  var user_id = req.param('user_id');
+  //マッチしないと取得できない
+  store.get('user_id', function(err, user_id2) {
+    if(err) {
+      res.json({err:err.message});
+      return;
+    }
+    if(user_id != user_id2) {
+      res.json({err:"user_id was not match."});
+      return;
+    }
+    store.get('agentid', function(err, agentid) {
+      if(err) {
+        res.json({err:err.message});
+        return;
+      }
+      res.json({err:null, content : {agentid : agentid} });
+    });
   });
 });
 app.get('/sys/user_id', function(req, res) {
   store.get('user_id', function(err, user_id) {
-    res.json({user_id:user_id});
+    if(err) {
+      res.json({err:err.message});
+      return;
+    }
+    res.json({err:null, content : {user_id : user_id?true:false} });
   });
 });
 app.get('/sys/enebularurl', function(req, res) {res.json(process.env.ISSUER);});
