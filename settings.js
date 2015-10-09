@@ -4,7 +4,7 @@ var settings = {
   debugMaxLength: 10000000,
   autoInstallModules: true,
   httpAdminRoot: '/red',
-  httpNodeRoot: '/red',
+  httpNodeRoot: '/',
   nodesDir: path.join(__dirname, 'nodes'),
   functionGlobalContext: { },    // enables global context
   httpNodeCors: {
