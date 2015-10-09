@@ -1,4 +1,5 @@
-<div>
+<div id="loading">Loading...</div>
+<div id="wrapper" class="hidden">
 	<div class="item">
 		<span>userId</span>:
 		<input id="userId" class="form-item" type="text"></input>
@@ -9,6 +10,9 @@
 	</div>
 </div>
 <style>
+	.hidden {
+		display: none;
+	}
 	.item {
 		padding: 10px;
 	}
@@ -22,27 +26,38 @@
 </style>
 <script>
 window.addEventListener('load', function() {
+	var wrapper = document.getElementById('wrapper');
+	request('GET', '/sys/user_id', {}, function(err, data) {
+		loaded();
+		if(err || !data.user_id) {
+			start();
+			return;
+		}
+		wrapper.textContent = "インストール済みです。";
+	});
+});
+
+function loaded() {
+	var wrapper = document.getElementById('wrapper');
+	var loading = document.getElementById('loading');
+	wrapper.className = '';
+	loading.className = 'hidden';
+}
+function start() {
 	var sendBtn = document.getElementById('sendBtn');
 	var userId = document.getElementById('userId');
 	var agentId = document.getElementById('agentId');
 	sendBtn.addEventListener('click', function(e) {
 		request('POST', '/sys/user_id', {user_id:userId.value}, showAgentId);
 	});
-	request('GET', '/sys/user_id', {}, function(err, data) {
-		if(err || !data.user_id) {
-			return;
-		}
-		userId.value = data.user_id;
-		sendBtn.textContent = '編集不可';
-		userId.readOnly = true;
-		showAgentId();
-	});
+	
 	function showAgentId() {
 		request('GET', '/sys/agentid', {}, function(err, data) {
 			agentId.value = data.agentid;
 		});
 	}
-});
+}
+
 function request(method, path, params, callback) {
 	var params_str = querystring(params)
 	var url = path;

@@ -68,7 +68,7 @@ if (process.env.PUBLIC_KEY_PATH) {
 }
 
 app.use('/red', express.static('public'));
-app.use('/', express.static('top'));
+app.use('/sys', express.static('top'));
 app.set('view engine', 'ejs');
 
 
