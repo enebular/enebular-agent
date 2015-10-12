@@ -1,0 +1,24 @@
+{
+  "name": "enebular agent",
+  "description": "The enebular agent is used to Data Management. For more about enebular see enebular.com.",
+  "keywords": [ "enebular", "enebular agent", "IoT", "Internet of Things", "node.js", "node" ],
+  "website": "https://enebular.com/",
+  "repository": "https://github.com/enebular/enebular-agent.git",
+  "logo": "https://avatars1.githubusercontent.com/u/8124914",
+  "success_url": "/sys/",
+  "env": {
+    "REDIRECT_URI": {
+      "description": "Deployed host.",
+      "value": ""
+    },
+    "PUBLIC_KEY_PATH": {
+      "description": "Path to public key.",
+      "value": "./keys/public.pem"
+    },
+    "ISSUER": {
+      "description": "JSON Web token issuer.",
+      "value": "https://enebular.com"
+    }
+  },
+  "addons": [ "mongolab" ]
+}

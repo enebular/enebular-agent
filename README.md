@@ -11,3 +11,7 @@ For more about enebular see [enebular.com](https://enebular.com).
 ## Use mongodb storage
 
 	REDIRECT_URI=https://<Deployed host and port number> PUBLIC_KEY_PATH=/key/path/public.pem ISSUER=https://enebular.com MONGO_URI=<MongoDB connection URI> node app.js
+
+## Deploy to Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/enebular/enebular-agent)
