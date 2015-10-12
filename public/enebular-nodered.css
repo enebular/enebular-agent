@@ -53,3 +53,14 @@
 .enebular-node-preview.is-open{
   display: block;
 }
+.enebular-logo {
+  pointer-events: none;
+  float: left;
+  margin-top: 5px;
+  font-size: 30px;
+  line-height: 30px;
+  text-decoration: none;
+}
+.enebular-logo img {
+  height: 25px;
+}

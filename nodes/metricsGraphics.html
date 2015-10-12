@@ -160,7 +160,7 @@
       var content = $('<div/>', {'id': 'chart-content'});
       var chartTab = $('<div/>', {'id': 'tab-chart'}).append(toolbar).append(content);
       RED.sidebar.addTab('chart', chartTab);
-      RED.sidebar.show('chart');
+      //RED.sidebar.show('chart');
       this.handleMetrics = function (t, o) {
         if ($("#tab-chart").css('display') == 'block' && document.hasFocus()) {
           var elemid = 'chart-' + o.id.replace('.', '-');
