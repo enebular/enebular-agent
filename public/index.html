@@ -1,26 +1,10 @@
 <!DOCTYPE html>
 <html>
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-
-<!--
-  Copyright 2013, 2015 IBM Corp.
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
-<head>
 <title>enebular</title>
 <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 <link href="vendor/jquery/css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" media="screen">
@@ -28,10 +12,12 @@
 <link rel="stylesheet" href="vendor/vendor.css">
 <link rel="stylesheet" href="red/style.min.css">
 <link rel="stylesheet" href="metricsgraphics.css">
+<link rel="stylesheet" href="enebular-nodered.css">
+<link rel="shortcut icon" href="favicon.ico">
 </head>
 <body spellcheck="false">
 <div id="header">
-    <span class="logo"><img src="enebular.png"></span>
+    <span class="enebular-logo"><img src="enebular.png"></span>
     <ul class="header-toolbar hide">
         <li><a id="btn-sidemenu" class="button" data-toggle="dropdown" href="#"><i class="fa fa-bars"></i></a></li>
     <ul>
@@ -159,8 +145,19 @@
 
 <script type="text/x-red" data-template-name="export-library-dialog">
     <div class="form-row">
-        <label for="node-input-filename" ><i class="fa fa-file"></i> Filename:</label>
-        <input type="text" id="node-input-filename" placeholder="Filename">
+        <label for="node-input-filename">Title:</label><br>
+        <input type="text" class="enebular-node-input" id="node-input-filename" placeholder="Give your flow a short, descriptive title."><br>
+        <label for="node-input-description" style="margin-top: 20px;">Description:</label><br>
+        <span style="display: inline-block; position: relative; margin-bottom: 20px;">
+            <textarea class="enebular-node-input" rows="10" id="node-input-description" placeholder="Describe what the flow does and how it is used. You can use markdown here. Use the preview tab to see how it looks." style="margin-bottom: 0"></textarea>
+            <div class="enebular-node-preview" id="enebular-node-preview"></div>
+            <div class="enebular-node-tab">
+                <div class="enebular-node-tabItem is-open" id="enebular-node-tabMarkdown">Markdown</div>
+                <div class="enebular-node-tabItem" id="enebular-node-tabPreview">Preview</div>
+            </div>
+        </span><br>
+        <label for="node-input-tags">Tags:</label><br>
+        <input type="text" class="enebular-node-input" id="node-input-tags" placeholder="Add comma- or space-separated some tags. (e.g. 'Raspberry_Pi, S3')">
     </div>
 </script>
 
@@ -173,10 +170,165 @@
 
 <script src="d3.min.js"></script>
 <script src="metricsgraphics.min.js"></script>
+<script src="markdown-it.min.js"></script>
 <script src="vendor/vendor.js"></script>
 <script src="vendor/ace/ace.js"></script>
 <script src="vendor/ace/ext-language_tools.js"></script>
 <script src="red/red.min.js"></script>
+<script>
 
+window.document.onkeydown = keys;
+
+function keys(event){
+
+  // クリックされたキーのコード
+  var keyCode = event.keyCode;
+  // キーイベントが発生した対象のオブジェクト
+  var obj = event.target;
+
+  console.log('event.target is ::', obj, obj.tagName);
+
+  // バックスペースキーを制御する
+  if(keyCode == 8){
+    // テキストボックス／テキストエリアを制御する
+    if((obj.tagName == "INPUT") || obj.tagName == "TEXTAREA"){
+      // 入力できる場合は制御しない
+      if(!obj.readOnly && !obj.disabled){
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+var ENEBULAR_URL = "http://localhost:7000/";
+
+var enebularTransporter = new EnebularTransporter();
+
+$.get("/sys/enebularurl", function(data) {
+    ENEBULAR_URL = data;
+    console.log("issuer", data);
+    enebularTransporter.load();
+
+}, "json");
+
+var Hook = function(){
+    var old;
+    this.addHook = function(obj, method, before, after){
+        old = obj[method];
+        obj[method] = function(){
+            before && before.apply(this,arguments);
+            var ret = old.apply(this,arguments);
+            after && after.apply(this, arguments, ret);
+            return ret;
+        }
+    }
+    this.removeHook = function(obj, method){
+        obj[method] = old;
+    }
+}
+
+var hook = new Hook();
+hook.addHook(RED.user, 'init', function() {}, function() {
+    RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "enebular", onselect: onselectHandler });
+});
+
+function EnebularTransporter() {
+    var current_timer = null;
+    var onSuccess = null;
+    window.addEventListener('message', function(e) {
+        switch(e.data.event) {
+            case 'flowadded':
+                if(onSuccess) onSuccess();
+                clearTimeout(current_timer);
+                break;
+        }
+    });
+    return {
+        load : function() {
+            window.parent.postMessage({
+                event : 'loaded',
+            }, ENEBULAR_URL);
+        },
+        addFlow : function(body, _onSuccess, onError) {
+            window.parent.postMessage({
+                event : 'flowadded',
+                body : body
+            }, ENEBULAR_URL);
+            onSuccess = _onSuccess;
+            current_timer = setTimeout(onError, 3000);
+        }
+    }
+}
+
+    function onselectHandler(){
+        var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
+        $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
+        $("#node-input-filename").attr('nodes',JSON.stringify(nns));
+
+        $( "#dialog" ).dialog("option",{
+            title: "Export nodes to enebular",
+            buttons: [
+                {
+                    id: "node-dialog-ok",
+                    text: "Ok",
+                    click: function() {
+
+                        var flowName = $("#node-input-filename").val();
+                        var flowDescription = $("#node-input-description").val() || '';
+                        var flowTags = $("#node-input-tags").val() || '';
+                        var flowTagArray = flowTags.split(/[ ,]+/);
+                        var flowBody = $("#node-input-filename").attr('nodes');
+
+                        if (!/^\s*$/.test(flowName)) {
+                            enebularTransporter.addFlow({
+                                    title : flowName,
+                                    description : flowDescription,
+                                    tags : flowTagArray,
+                                    body : flowBody
+                            },
+                            function() {
+                                RED.notify("Saved flow to enebular", "success");
+                            },function() {
+                                RED.notify("Failed to save flow to enebular", "error");
+                            });
+                            $( this ).dialog( "close" );
+                        } else {
+                            window.alert('Please enter a title.');
+                        }
+                    }
+                },
+                {
+                    id: "node-dialog-cancel",
+                    text: "Cancel",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        }).dialog( "open" );
+
+        var md = window.markdownit();
+
+        $('#enebular-node-tabMarkdown').click(function(e){
+            $(this).addClass('is-open');
+            $('#enebular-node-tabPreview').removeClass('is-open');
+            $('#enebular-node-preview').removeClass('is-open');
+        });
+        $('#enebular-node-tabPreview').click(function(){
+            $(this).addClass('is-open');
+            $('#enebular-node-tabMarkdown').removeClass('is-open');
+            $('#enebular-node-preview').addClass('is-open');
+
+            var htmlText = !!($('#node-input-description').val()) ? md.render($('#node-input-description').val().trim()) : '<span class="muted">Nothing to preview</span>'
+
+            $('#enebular-node-preview').html(htmlText);
+        });
+    }
+
+
+
+
+</script>
 </body>
 </html>

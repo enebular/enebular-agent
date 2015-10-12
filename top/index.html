@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<script src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.1.5/ZeroClipboard.min.js"></script>
+	<link rel="shortcut icon" href="ico/favicon.ico">
+	<title>enebular Agent | Setup</title>
+</head>
+<body>
+	<div id="dialog">
+		<div id="dialogTitle">
+			<div id="loading">Loading...</div>
+			<div id="install-message"></div>
+			<div id="message" class="error"></div>
+		</div>
+		<div id="wrapper">
+			<div id="dialogLeft">
+				<img src="img/enebular_256.png" />
+			</div>
+			<div id="dialogRight">
+				<div class="item">
+					<input id="userId" class="form-item" placeholder="User ID" />
+					<button id="sendBtn" class="form-button">Send</button>
+				</div>
+				<div class="item">
+					<input id="agentId" class="form-item" placeholder="Agent ID" readonly="readonly" style="background:#eee" />
+					<button id="copyBtn" class="form-button">Copy</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+
+<style>
+	body {
+		color: #696565;
+		font-family: Verdana,Arial,sans-serif;
+		font-size: 14px;
+	}
+	h3, p {
+		margin: 0;
+	}
+	label {
+		width: 100px;
+    line-height: 20px;
+    cursor: pointer;
+	}
+	#dialog {
+    width: 50%;
+    top: 25%;
+    bottom: 25%;
+    left: 25%;
+		position: absolute;
+		border-radius: 1px;
+		box-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+		min-height: 320px;
+	}
+	#wrapper {
+    background: #fff;
+    padding: 2%;
+	}
+	#dialogTitle {
+		padding: 2%;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+    border-radius: 0;
+	}
+	#dialogLeft {
+		width: 30%;
+		float: left;
+	}
+	#dialogLeft img {
+		width: 100%;
+	}
+	#dialogRight {
+		position: absolute;
+		width: 50%;
+		left: 43%;
+		height: 100%;
+		vertical-align: bottom;
+	}
+	.form-button {
+		background: #147da0;
+    color: #fff;
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid #106581;
+    text-decoration: none;
+    border-radius: 2px;
+    line-height: 1.42857143;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    vertical-align: middle;
+    font-weight: 400;
+	}
+	.hidden {
+		display: none;
+	}
+	.item {
+		margin-top: 10px;
+	}
+	.form-item {
+		width: 70%;
+		height: 20px;
+		border: 1px solid #ccc;
+		box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+		padding: 6px 6px;
+		line-height: 20px;
+		border-radius: 4px;
+		margin-bottom: 10px;
+		margin-top: 5px;
+		font-size: 14px;
+	}
+	.error {
+		color: #f00;
+	}
+	@media screen and (max-width: 600px) {
+		#dialog {
+	    width: 100%;
+	    height: 100%;
+	    left: 0;
+	    top: 0;
+	    margin: 5px;
+		}
+		#dialogLeft img {
+			width: 50%;
+		}
+		#dialogLeft {
+			width: 100%;
+			float: node;
+			text-align: center;
+		}
+		#dialogRight {
+			position: relative;
+			width: 100%;
+			left: 0;
+		}
+	}
+</style>
+<script>
+window.addEventListener('load', function() {
+	var wrapper = document.getElementById('wrapper');
+	request('GET', '/sys/user_id', {}, function(err, data) {
+		loaded();
+		if(err) {
+			error(err);
+			return;
+		}
+		if(!data.user_id) {
+			not_installed_view();
+		}else{
+			installed_view();
+		}
+	});
+});
+
+function loaded() {
+	var wrapper = document.getElementById('wrapper');
+	var loading = document.getElementById('loading');
+	wrapper.className = '';
+	loading.className = 'hidden';
+	var clip = new ZeroClipboard(document.getElementById("copyBtn"));
+	clip.on('aftercopy', function () {
+		alert('Agent IDをコピーしました');
+	});
+}
+function error(text) {
+	var message = document.getElementById('message');
+	message.textContent = text;
+}
+
+function not_installed_view() {
+	var install_message = document.getElementById('install-message');
+	install_message.innerHTML = "<h3>enebular Agentをセットアップします</h3><p>User IDを入力してAgent IDを発行してください</p>";
+	var sendBtn = document.getElementById('sendBtn');
+	var userId = document.getElementById('userId');
+	sendBtn.addEventListener('click', function(e) {
+		var user_id = userId.value;
+		request('POST', '/sys/user_id', {user_id : user_id}, function() {
+			showAgentId(user_id);
+		});
+	});
+}
+
+function installed_view() {
+	var install_message = document.getElementById('install-message');
+	install_message.innerHTML = "<h3>enebular Agentは既にセットアップ済みです</h3><p>User IDを入力するとAgent IDを確認できます</p>";
+	var sendBtn = document.getElementById('sendBtn');
+	var userId = document.getElementById('userId');
+	sendBtn.addEventListener('click', function(e) {
+		var user_id = userId.value;
+		showAgentId(user_id)
+	});
+}
+
+function showAgentId(user_id) {
+	var userAgent = window.navigator.userAgent.toLowerCase();
+	var agentId = document.getElementById('agentId');
+	var copyBtn = document.getElementById('copyBtn');
+	request('GET', '/sys/agentid', {user_id:user_id}, function(err, data) {
+		if(err) {
+			error(err);
+			return;
+		}
+		agentId.value = data.agentid;
+		copyBtn.setAttribute('data-clipboard-text', data.agentid);
+	});
+}
+
+function request(method, path, params, callback) {
+	var params_str = querystring(params)
+	var url = path;
+	if(method == 'GET') {
+		url += '?' + params_str;
+	}
+	var xhr = createCORSRequest(method , url);
+	xhr.withCredentials = true;
+	xhr.onload = function() {
+		var data = JSON.parse(xhr.responseText);
+		callback(data.err, data.content);
+	}
+	xhr.onerror = function() {
+		callback(xhr.statusText || 'unknown error');
+	}
+	xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhr.send(params_str);
+}
+
+function createCORSRequest(method, url) {
+    var xhr = new XMLHttpRequest();
+    if ("withCredentials" in xhr) {
+        xhr.open(method, url, true);
+    } else if (typeof XDomainRequest != "undefined") {
+        xhr = new XDomainRequest();
+        xhr.open(method, url);
+    } else {
+        xhr = null;
+    }
+    return xhr;
+}
+
+function querystring(params) {
+	var str_arr = [];
+	for(k in params) {
+		str_arr.push(k + '=' + params[k]);
+	}
+	return str_arr.join('&');
+}
+
+</script>

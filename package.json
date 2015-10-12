@@ -9,15 +9,14 @@
   },
   "dependencies": {
     "bcryptjs": "~2.x",
-    "ejs": "~2.x",
+    "body-parser": "^1.14.0",
+    "ejs": "^2.3.4",
     "express": "~4.x",
     "express-session": "^1.11.3",
     "jsonwebtoken": "^5.0.4",
     "mongodb": "~1.4.x",
-    "node-red": "~0.10.x",
-    "node-red-contrib-ds18b20": "~0.0.3",
-    "node-red-contrib-td": "~0.0.8",
-    "node-red-node-pusher": "~0.0.2",
+    "node-red": "~0.10.x"
+    "uuid": "^2.0.1",
     "when": "~3.x"
   }
 }
