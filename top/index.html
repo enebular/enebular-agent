@@ -177,7 +177,7 @@ function error(text) {
 
 function not_installed_view() {
 	var install_message = document.getElementById('install-message');
-	install_message.innerHTML = "<h3>enebular Agentをセットアップします</h3><p>User IDを入力してAgent IDを発行してください</p>";
+	install_message.innerHTML = "<h3>enebular agentをセットアップします</h3><p>User IDを入力してAgent IDを発行してください</p>";
 	var sendBtn = document.getElementById('sendBtn');
 	var userId = document.getElementById('userId');
 	sendBtn.addEventListener('click', function(e) {
@@ -190,7 +190,7 @@ function not_installed_view() {
 
 function installed_view() {
 	var install_message = document.getElementById('install-message');
-	install_message.innerHTML = "<h3>enebular Agentは既にセットアップ済みです</h3><p>User IDを入力するとAgent IDを確認できます</p>";
+	install_message.innerHTML = "<h3>enebular agentはセットアップ済みです</h3><p>User IDを入力するとAgent IDを確認できます</p>";
 	var sendBtn = document.getElementById('sendBtn');
 	var userId = document.getElementById('userId');
 	sendBtn.addEventListener('click', function(e) {
