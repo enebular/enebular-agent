@@ -13,9 +13,9 @@ var settings = {
   }
 };
 
-if (process.env.MONGO_URI) {
+if (process.env.MONGO_URI || process.env.MONGOLAB_URI) {
   settings.storageModule = require('./mongostorage');
-  settings.mongoUrl = process.env.MONGO_URI;
+  settings.mongoUrl = process.env.MONGO_URI || process.env.MONGOLAB_URI;
   settings.mongoAppname = 'enebular';
 } else {
   settings.userDir = path.join(__dirname);
