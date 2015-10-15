@@ -5,6 +5,10 @@ var store = require('../store');
 module.exports = function(publicKeyPath, options) {
   var publicKey = fs.readFileSync(publicKeyPath, 'utf8');
   return function authenticate(req, res, next) {
+    if(req.path == '/red/auth/login' || req.path == '/red/auth/token') {
+      next();
+      return;
+    }
     if (!req.session) {
       throw new Error('Session is not available. Confirm the server setting.');
     } else if (req.session.identity) {
