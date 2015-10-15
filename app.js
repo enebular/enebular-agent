@@ -2,7 +2,6 @@ var fs = require('fs');
 var path = require('path');
 var http = require('http');
 var https = require('https');
-var fs = require('fs');
 var express = require('express');
 var session = require('express-session');
 var RED = require('node-red');
@@ -56,7 +55,9 @@ if (process.env.PUBLIC_KEY_PATH) {
   app.all("/red/*", JWTAuth(process.env.PUBLIC_KEY_PATH, {
     issuer: process.env.ISSUER
   }));
-} else if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
+}
+
+if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
   settings.adminAuth = {
     type: 'credentials',
     users: [{

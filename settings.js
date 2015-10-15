@@ -3,7 +3,7 @@ var path = require('path');
 var settings = {
   debugMaxLength: 10000000,
   autoInstallModules: true,
-  httpAdminRoot: '/red',
+  httpAdminRoot: '/admin',
   httpNodeRoot: '/',
   nodesDir: path.join(__dirname, 'nodes'),
   functionGlobalContext: { },    // enables global context
