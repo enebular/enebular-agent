@@ -236,10 +236,15 @@ hook.addHook(RED.user, 'init', function() {}, function() {
 function EnebularTransporter() {
     var current_timer = null;
     var onSuccess = null;
+    var onError = null;
     window.addEventListener('message', function(e) {
         switch(e.data.event) {
             case 'flowadded':
-                if(onSuccess) onSuccess();
+                if(e.data.body.err) {
+                    if(onError) onError();
+                }else{
+                    if(onSuccess) onSuccess();
+                }
                 clearTimeout(current_timer);
                 break;
         }
@@ -250,13 +255,14 @@ function EnebularTransporter() {
                 event : 'loaded',
             }, ENEBULAR_URL);
         },
-        addFlow : function(body, _onSuccess, onError) {
+        addFlow : function(body, _onSuccess, _onError, onTimeout) {
             window.parent.postMessage({
                 event : 'flowadded',
                 body : body
             }, ENEBULAR_URL);
             onSuccess = _onSuccess;
-            current_timer = setTimeout(onError, 3000);
+            onError = _onError;
+            current_timer = setTimeout(onTimeout, 3000);
         }
     }
 }
@@ -289,6 +295,8 @@ function EnebularTransporter() {
                             },
                             function() {
                                 RED.notify("Saved flow to enebular", "success");
+                            },function() {
+                                RED.notify("Failed to save flow because of limit exceeded", "error");
                             },function() {
                                 RED.notify("Failed to save flow to enebular", "error");
                             });
