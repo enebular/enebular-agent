@@ -338,6 +338,9 @@ function EnebularTransporter() {
 
 function onAdminInit() {
     RED.sidebar.addTab('admin', '<div id="tab-admin">Admin</div>');
+    admin_refresh();
+}
+function admin_refresh() {
     get_nodes(function(err, nodes) {
         var str = '<div><input id="admin-module-name" type="text"/><button id="admin-install-btn">Install</button></div>';
         str += nodes.map(function(n) {
@@ -347,7 +350,7 @@ function onAdminInit() {
         $('#tab-admin').html(str);
         $('#admin-install-btn').click(function(e) {
             var name = $('#admin-module-name').val();
-            install_node(name, function() {console.log('success');});
+            install_node(name, function() {console.log('success');admin_refresh();});
         });
         $('.admin-edit-checkbox').click(function(e) {
             var module = $(this).data('cid');
@@ -356,7 +359,7 @@ function onAdminInit() {
         });
         $('.admin-delete-btn').click(function(e) {
             var module = $(this).data('cid');
-            remove_node(module, function() {console.log('success');});
+            remove_node(module, function() {console.log('success');admin_refresh();});
         });
     });
 }
@@ -385,11 +388,11 @@ function admin_get(url, cb) {
 }
 
 function admin_post(url, body, cb) {
-    admin_base(url, 'POST', body, cb);
+    admin_base(url, 'POST', JSON.stringify(body), cb);
 }
 
 function admin_put(url, body, cb) {
-    admin_base(url, 'PUT', body, cb);
+    admin_base(url, 'PUT', JSON.stringify(body), cb);
 }
 
 function admin_delete(url, cb) {
@@ -405,7 +408,7 @@ function admin_base(url, method, body, cb) {
         },
         contentType: 'application/json',
         type: method,
-        data: JSON.stringify(body),
+        data: body,
         cache: false,
         url: url,
         success: function(data) {
