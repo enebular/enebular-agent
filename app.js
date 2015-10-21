@@ -55,8 +55,7 @@ if (process.env.PUBLIC_KEY_PATH) {
   app.all("/red/*", JWTAuth(process.env.PUBLIC_KEY_PATH, {
     issuer: process.env.ISSUER
   }));
-}
-if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
+} else if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
   settings.adminAuth = {
     type: 'credentials',
     users: [{
