@@ -231,6 +231,7 @@ var Hook = function(){
 var hook = new Hook();
 hook.addHook(RED.user, 'init', function() {}, function() {
     RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "enebular", onselect: onselectHandler });
+    onAdminInit();
 });
 
 function EnebularTransporter() {
@@ -333,6 +334,86 @@ function EnebularTransporter() {
             $('#enebular-node-preview').html(htmlText);
         });
     }
+
+
+function onAdminInit() {
+    RED.sidebar.addTab('admin', '<div id="tab-admin">Admin</div>');
+    get_nodes(function(err, nodes) {
+        var str = '<div><input id="admin-module-name" type="text"/><button id="admin-install-btn">Install</button></div>';
+        str += nodes.map(function(n) {
+            var checked=n.enabled?'checked="checked"':'';
+            return '<div>'+n.name+'<input type="checkbox" '+checked+' data-cid="'+n.module+'" class="admin-edit-checkbox" /><button data-cid="'+n.module+'" class="admin-delete-btn"></button></div>';
+        }).join('');
+        $('#tab-admin').html(str);
+        $('#admin-install-btn').click(function(e) {
+            var name = $('#admin-module-name').val();
+            install_node(name, function() {console.log('success');});
+        });
+        $('.admin-edit-checkbox').click(function(e) {
+            var module = $(this).data('cid');
+            var enabled = $(this).is(':checked');
+            edit_node(module, enabled, function() {console.log('success');});
+        });
+        $('.admin-delete-btn').click(function(e) {
+            var module = $(this).data('cid');
+            remove_node(module, function() {console.log('success');});
+        });
+    });
+}
+
+function get_nodes(cb) {
+    admin_get('nodes', cb);
+}
+function install_node(module, cb) {
+    admin_post('nodes', {module : module}, cb);
+}
+
+function get_node(module, cb) {
+    admin_get('nodes/'+module, {module : module}, cb);
+}
+
+function edit_node(module, enabled, cb) {
+    admin_put('nodes/'+module, {enabled : enabled}, cb);
+}
+
+function remove_node(module, cb) {
+    admin_delete('nodes/'+module, cb);
+}
+
+function admin_get(url, cb) {
+    admin_base(url, 'GET', null, cb);
+}
+
+function admin_post(url, body, cb) {
+    admin_base(url, 'POST', body, cb);
+}
+
+function admin_put(url, body, cb) {
+    admin_base(url, 'PUT', body, cb);
+}
+
+function admin_delete(url, cb) {
+    admin_base(url, 'DELETE', null, cb);
+}
+
+function admin_base(url, method, body, cb) {
+    var auth_tokens = RED.settings.get("auth-tokens");
+    $.ajax({
+        headers: {
+            "Accept":"application/json",
+            "Authorization":"Bearer "+auth_tokens.access_token
+        },
+        contentType: 'application/json',
+        type: method,
+        data: JSON.stringify(body),
+        cache: false,
+        url: url,
+        success: function(data) {
+            console.log("nodes", data);
+            cb(null, data);
+        }
+    });
+}
 
 
 
