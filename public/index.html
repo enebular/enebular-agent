@@ -342,7 +342,7 @@ function onAdminInit() {
         var str = '<div><input id="admin-module-name" type="text"/><button id="admin-install-btn">Install</button></div>';
         str += nodes.map(function(n) {
             var checked=n.enabled?'checked="checked"':'';
-            return '<div>'+n.name+'<input type="checkbox" '+checked+' data-cid="'+n.module+'" class="admin-edit-checkbox" /><button data-cid="'+n.module+'" class="admin-delete-btn"></button></div>';
+            return '<div>'+n.name+'<input type="checkbox" '+checked+' data-cid="'+n.module+'" class="admin-edit-checkbox" /><button data-cid="'+n.module+'" class="admin-delete-btn">Del</button></div>';
         }).join('');
         $('#tab-admin').html(str);
         $('#admin-install-btn').click(function(e) {
