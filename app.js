@@ -119,6 +119,11 @@ app.get('/sys/user_id', function(req, res) {
 });
 app.get('/sys/enebularurl', function(req, res) {res.json(process.env.ISSUER);});
 
+
+var sqlpadApp = require('./sqlpad');
+app.use('/sqlpad', sqlpadApp);
+
+
 RED.init(server, settings);
 app.use(settings.httpAdminRoot, RED.httpAdmin);
 app.use(settings.httpNodeRoot, RED.httpNode);
