@@ -43,6 +43,7 @@ app.use(session({ secret: '4r13ysgyYD' }));
 
 var store = require('./store');
 var agentIdUtil = require('./server/agentid');
+var searchModule = require('./server/search');
 
 store.init(function(err) {
   if(err) throw err;
@@ -70,6 +71,14 @@ app.use('/red', express.static('public'));
 app.use('/sys', express.static('top'));
 app.set('view engine', 'ejs');
 
+
+app.get('/red/search/:module', function(req, res) {
+  var module = req.param('module');
+  searchModule(module, function(err, content) {
+    if(err) res.json({err:err});
+    else res.json({content:content});
+  });
+});
 
 app.post('/sys/user_id', function(req, res) {
   var user_id = req.param('user_id');

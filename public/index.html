@@ -342,12 +342,29 @@ function onAdminInit() {
 }
 function admin_refresh() {
     get_nodes(function(err, nodes) {
-        var str = '<div><input id="admin-module-name" type="text"/><button id="admin-install-btn">Install</button></div>';
+        var str = '<div><input id="admin-module-name" type="text" value="node-red-contrib-"/><div id="admin-search-result"></div><button id="admin-install-btn">Install</button></div>';
         str += nodes.map(function(n) {
             var checked=n.enabled?'checked="checked"':'';
             return '<div>'+n.name+'<input type="checkbox" '+checked+' data-cid="'+n.module+'" class="admin-edit-checkbox" /><button data-cid="'+n.module+'" class="admin-delete-btn">Del</button></div>';
         }).join('');
         $('#tab-admin').html(str);
+        $('#admin-module-name').keyup(function(e) {
+            var name = $('#admin-module-name').val();
+            search_module(name, function(err, content) {
+                if(err) {
+                    $('#admin-search-result').html('<div>Not Found</div>');
+                    return;
+                }
+                var html = content.map(function(m) {
+                    return '<div class="admin-search-result-item">'+m+'</div>';
+                }).join('');
+                $('#admin-search-result').html(html);
+                $('.admin-search-result-item').click(function(e) {
+                    var module_name = $(this).text();
+                    $('#admin-module-name').val(module_name);
+                });
+            });
+        });
         $('#admin-install-btn').click(function(e) {
             var name = $('#admin-module-name').val();
             install_node(name, function() {console.log('success');admin_refresh();});
@@ -367,6 +384,14 @@ function admin_refresh() {
 function get_nodes(cb) {
     admin_get('nodes', cb);
 }
+
+function search_module(module, cb) {
+    admin_get('search/'+module, function(err, data) {
+        if(err || data.err) cb(err || data.err);
+        else cb(null, data.content);
+    });
+}
+
 function install_node(module, cb) {
     admin_post('nodes', {module : module}, cb);
 }
