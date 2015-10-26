@@ -268,6 +268,10 @@ function EnebularTransporter() {
     }
 }
 
+function onImportSelected() {
+    RED.view.importNodes(data);
+
+}
     function onselectHandler(){
         var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
         $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
@@ -426,11 +430,14 @@ function admin_delete(url, cb) {
 
 function admin_base(url, method, body, cb) {
     var auth_tokens = RED.settings.get("auth-tokens");
+    var headers = {
+        "Accept":"application/json",
+    }
+    if(auth_tokens) {
+        headers["Authorization"] = "Bearer "+auth_tokens.access_token;
+    }
     $.ajax({
-        headers: {
-            "Accept":"application/json",
-            "Authorization":"Bearer "+auth_tokens.access_token
-        },
+        headers: headers,
         contentType: 'application/json',
         type: method,
         data: body,
