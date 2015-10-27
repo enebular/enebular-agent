@@ -10,6 +10,7 @@ node_modules
 .profile
 .config.json
 .sessions.json
+.flows_*
 flows_*
 npm-debug.log
 lib

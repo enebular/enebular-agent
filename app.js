@@ -2,7 +2,6 @@ var fs = require('fs');
 var path = require('path');
 var http = require('http');
 var https = require('https');
-var fs = require('fs');
 var express = require('express');
 var session = require('express-session');
 var RED = require('node-red');
@@ -11,7 +10,7 @@ var bodyParser = require('body-parser');
 var app = express();
 
 var server = null;
-if(process.env.AUDIENCE.match("^https://localhost")) {
+if(process.env.REDIRECT_URI.match("^https://localhost")) {
   server = createHttpsServer();
 }else{
   server = createHttpServer();
@@ -42,16 +41,20 @@ app.use(bodyParser.urlencoded({
 
 app.use(session({ secret: '4r13ysgyYD' }));
 
+var store = require('./store');
 var agentIdUtil = require('./server/agentid');
+var searchModule = require('./server/search');
 
-agentIdUtil.init();
+store.init(function(err) {
+  if(err) throw err;
+  agentIdUtil.init();
+});
 
 var JWTAuth = require('./auth/jwt');
 
 if (process.env.PUBLIC_KEY_PATH) {
   app.all("/red/*", JWTAuth(process.env.PUBLIC_KEY_PATH, {
-    issuer: process.env.ISSUER,
-    audience: agentIdUtil.getAgentId()
+    issuer: process.env.ISSUER
   }));
 } else if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {
   settings.adminAuth = {
@@ -64,24 +67,63 @@ if (process.env.PUBLIC_KEY_PATH) {
   };
 }
 
-var store = require('./store');
 app.use('/red', express.static('public'));
-app.use('/', express.static('top'));
+app.use('/sys', express.static('top'));
 app.set('view engine', 'ejs');
 
 
+app.get('/red/search/:module', function(req, res) {
+  var module = req.param('module');
+  searchModule(module, function(err, content) {
+    if(err) res.json({err:err});
+    else res.json({content:content});
+  });
+});
+
 app.post('/sys/user_id', function(req, res) {
   var user_id = req.param('user_id');
-  store.set('user_id', user_id, function(err) {
-    res.json({err:err});
+  store.get('user_id', function(err, old_user_id) {
+    if(err) {
+      res.json({err:err.message});
+      return;
+    }
+    if(old_user_id) {
+      res.json({err:"user_id was already registerd."});
+      return;
+    }
+    store.set('user_id', user_id, function(err) {
+      res.json({err:err});
+    });
   });
 });
 app.get('/sys/agentid', function(req, res) {
-  res.json({agentid:agentIdUtil.getAgentId()});
+  var user_id = req.param('user_id');
+  //マッチしないと取得できない
+  store.get('user_id', function(err, user_id2) {
+    if(err) {
+      res.json({err:err.message});
+      return;
+    }
+    if(user_id != user_id2) {
+      res.json({err:"user_id was not match."});
+      return;
+    }
+    store.get('agentid', function(err, agentid) {
+      if(err) {
+        res.json({err:err.message});
+        return;
+      }
+      res.json({err:null, content : {agentid : agentid} });
+    });
+  });
 });
 app.get('/sys/user_id', function(req, res) {
   store.get('user_id', function(err, user_id) {
-    res.json({user_id:user_id});
+    if(err) {
+      res.json({err:err.message});
+      return;
+    }
+    res.json({err:null, content : {user_id : user_id?true:false} });
   });
 });
 app.get('/sys/enebularurl', function(req, res) {res.json(process.env.ISSUER);});

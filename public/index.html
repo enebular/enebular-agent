@@ -1,26 +1,10 @@
 <!DOCTYPE html>
 <html>
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-
-<!--
-  Copyright 2013, 2015 IBM Corp.
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
-<head>
 <title>enebular</title>
 <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 <link href="vendor/jquery/css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" media="screen">
@@ -29,10 +13,11 @@
 <link rel="stylesheet" href="red/style.min.css">
 <link rel="stylesheet" href="metricsgraphics.css">
 <link rel="stylesheet" href="enebular-nodered.css">
+<link rel="shortcut icon" href="favicon.ico">
 </head>
 <body spellcheck="false">
 <div id="header">
-    <span class="logo"><img src="enebular.png"></span>
+    <span class="enebular-logo"><img src="enebular.png"></span>
     <ul class="header-toolbar hide">
         <li><a id="btn-sidemenu" class="button" data-toggle="dropdown" href="#"><i class="fa fa-bars"></i></a></li>
     <ul>
@@ -245,14 +230,27 @@ var Hook = function(){
 
 var hook = new Hook();
 hook.addHook(RED.user, 'init', function() {}, function() {
-    RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "Enebular", onselect: onselectHandler });
+    RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "enebular", onselect: onselectHandler });
 });
+
+hook.addHook(RED.sidebar, 'init', function() {}, function() {
+    onAdminInit();
+});
+
+//RED.sidebar.config
 
 function EnebularTransporter() {
     var current_timer = null;
+    var onSuccess = null;
+    var onError = null;
     window.addEventListener('message', function(e) {
         switch(e.data.event) {
             case 'flowadded':
+                if(e.data.body.err) {
+                    if(onError) onError();
+                }else{
+                    if(onSuccess) onSuccess();
+                }
                 clearTimeout(current_timer);
                 break;
         }
@@ -263,16 +261,22 @@ function EnebularTransporter() {
                 event : 'loaded',
             }, ENEBULAR_URL);
         },
-        addFlow : function(body, onError) {
+        addFlow : function(body, _onSuccess, _onError, onTimeout) {
             window.parent.postMessage({
                 event : 'flowadded',
                 body : body
             }, ENEBULAR_URL);
-            current_timer = setTimeout(onError, 3000);
+            onSuccess = _onSuccess;
+            onError = _onError;
+            current_timer = setTimeout(onTimeout, 3000);
         }
     }
 }
 
+function onImportSelected() {
+    RED.view.importNodes(data);
+
+}
     function onselectHandler(){
         var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
         $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
@@ -298,8 +302,13 @@ function EnebularTransporter() {
                                     description : flowDescription,
                                     tags : flowTagArray,
                                     body : flowBody
-                            }, function() {
-                                window.alert('Flowを追加できませんでした。設定を見直してください。');
+                            },
+                            function() {
+                                RED.notify("Saved flow to enebular", "success");
+                            },function() {
+                                RED.notify("Failed to save flow because of limit exceeded", "error");
+                            },function() {
+                                RED.notify("Failed to save flow to enebular", "error");
                             });
                             $( this ).dialog( "close" );
                         } else {
@@ -334,6 +343,121 @@ function EnebularTransporter() {
             $('#enebular-node-preview').html(htmlText);
         });
     }
+
+
+function onAdminInit() {
+    RED.sidebar.addTab('admin', '<div id="tab-admin" style="display:none;">Admin</div>');
+    RED.sidebar.show('info');
+    admin_refresh();
+}
+
+function admin_refresh() {
+    get_nodes(function(err, nodes) {
+        var str = '<div class="enebular-admin-install-panel"><input id="admin-module-name" type="text" value="node-red-contrib-"/><div id="admin-search-result"></div><button id="admin-install-btn" class="enebular-admin-install-btn">Install</button></div>';
+        str += '<table class="enebular-admin-module-list">';
+        str += nodes.map(function(n) {
+            var checked=n.enabled?'checked="checked"':'';
+            return '<tr class="enebular-admin-module"><td><input type="checkbox" '+checked+' data-cid="'+n.module+'" class="enebular-admin-enable-checkbox" /></td><td>'+n.name+'</td><td><div data-cid="'+n.module+'" class="enebular-admin-delete-btn">x</div></td></tr>';
+        }).join('');
+        str += '</table>';
+        $('#tab-admin').html('<div class="enebular-admin-wrapper">'+str+'</div>');
+        $('#admin-module-name').keyup(function(e) {
+            var name = $('#admin-module-name').val();
+            search_module(name, function(err, content) {
+                if(err) {
+                    $('#admin-search-result').html('<div>Not Found</div>');
+                    return;
+                }
+                var html = content.map(function(m) {
+                    return '<div class="enebular-admin-search-item">'+m+'</div>';
+                }).join('');
+                $('#admin-search-result').html(html);
+                $('.enebular-admin-search-item').click(function(e) {
+                    var module_name = $(this).text();
+                    $('#admin-module-name').val(module_name);
+                });
+            });
+        });
+        $('#admin-install-btn').click(function(e) {
+            var name = $('#admin-module-name').val();
+            install_node(name, function() {console.log('success');admin_refresh();});
+        });
+        $('.enebular-admin-enable-checkbox').click(function(e) {
+            var module = $(this).data('cid');
+            var enabled = $(this).is(':checked');
+            edit_node(module, enabled, function() {console.log('success');});
+        });
+        $('.enebular-admin-delete-btn').click(function(e) {
+            var module = $(this).data('cid');
+            remove_node(module, function() {console.log('success');admin_refresh();});
+        });
+    });
+}
+
+function get_nodes(cb) {
+    admin_get('nodes', cb);
+}
+
+function search_module(module, cb) {
+    admin_get('search/'+module, function(err, data) {
+        if(err || data.err) cb(err || data.err);
+        else cb(null, data.content);
+    });
+}
+
+function install_node(module, cb) {
+    admin_post('nodes', {module : module}, cb);
+}
+
+function get_node(module, cb) {
+    admin_get('nodes/'+module, {module : module}, cb);
+}
+
+function edit_node(module, enabled, cb) {
+    admin_put('nodes/'+module, {enabled : enabled}, cb);
+}
+
+function remove_node(module, cb) {
+    admin_delete('nodes/'+module, cb);
+}
+
+function admin_get(url, cb) {
+    admin_base(url, 'GET', null, cb);
+}
+
+function admin_post(url, body, cb) {
+    admin_base(url, 'POST', JSON.stringify(body), cb);
+}
+
+function admin_put(url, body, cb) {
+    admin_base(url, 'PUT', JSON.stringify(body), cb);
+}
+
+function admin_delete(url, cb) {
+    admin_base(url, 'DELETE', null, cb);
+}
+
+function admin_base(url, method, body, cb) {
+    var auth_tokens = RED.settings.get("auth-tokens");
+    var headers = {
+        "Accept":"application/json",
+    }
+    if(auth_tokens) {
+        headers["Authorization"] = "Bearer "+auth_tokens.access_token;
+    }
+    $.ajax({
+        headers: headers,
+        contentType: 'application/json',
+        type: method,
+        data: body,
+        cache: false,
+        url: url,
+        success: function(data) {
+            console.log("nodes", data);
+            cb(null, data);
+        }
+    });
+}
 
 
 

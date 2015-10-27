@@ -1,29 +1,25 @@
-# enebular-agent
+# enebular agent
+========================
+The enebular agent is used to Data Management.For more about enebular see [enebular.com](https://enebular.com).
 
+[![NPM](https://nodei.co/npm/enebular-agent.png?downloads=true)](https://nodei.co/npm/enebular-agent/)
 
-## 1. 鍵の作成
+Use file storage
+-------
 
-### Private Keyの作成
+	REDIRECT_URI=https://<Deployed host and port number> PUBLIC_KEY_PATH=./keys/public.pem ISSUER=https://enebular.com node app.js
 
-    openssl genrsa -des3 -out private.pem 2048
+Use mongodb storage
+-------
 
-### Public Keyの生成
+	REDIRECT_URI=https://<Deployed host and port number> PUBLIC_KEY_PATH=./keys/public.pem ISSUER=https://enebular.com MONGO_URI=<MongoDB connection URI> node app.js
 
-    openssl rsa -in private.pem -outform PEM -pubout -out public.pem
+Deploy to Heroku
+-------
 
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/enebular/enebular-agent)
 
-### Private Keyをdecryptする
+License
+-------
 
-
-    mv private.pem private_en.pem
-    openssl rsa -in private_en.pem -out private.pem
-
-
-## 2. テストスタート
-
-    AUDIENCE=http://localhost:5000 PUBLIC_KEY_PATH=keys/public.pem ISSUER=http://localhost:7000 node app.js
-
-
-AUDIENCEがhttps://localhostで始まっていると、sslフォルダ以下の自己証明書を使用しHTTPSサーバを起動します。
-
-    AUDIENCE=https://localhost:5000 PUBLIC_KEY_PATH=keys/public.pem ISSUER=http://localhost:7000 node app.js
+See [license] (https://github.com/joeartsea/node-red-contrib-force/blob/master/LICENSE) (Apache License Version 2.0).

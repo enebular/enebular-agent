@@ -16,10 +16,36 @@
     "jsonwebtoken": "^5.0.4",
     "mongodb": "~1.4.x",
     "node-red": "~0.10.x",
-    "node-red-contrib-ds18b20": "~0.0.3",
-    "node-red-contrib-td": "~0.0.8",
-    "node-red-node-pusher": "~0.0.2",
+    "request": "^2.65.0",
     "uuid": "^2.0.1",
     "when": "~3.x"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enebular/enebular-agent"
+  },
+  "license": "Apache",
+  "keywords": [
+    "enebular",
+    "enebular-agent",
+    "node-red",
+    "editor",
+    "messaging",
+    "iot",
+    "m2m",
+    "pi",
+    "arduino",
+    "beaglebone",
+    "flow"
+  ],
+  "author": {
+    "name": "Atsushi Kojo",
+    "email": "artsnet111@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "joeartsea",
+      "email": "artsnet111@gmail.com"
+    }
+  ]
 }

@@ -53,3 +53,68 @@
 .enebular-node-preview.is-open{
   display: block;
 }
+.enebular-logo {
+  pointer-events: none;
+  float: left;
+  margin-top: 5px;
+  font-size: 30px;
+  line-height: 30px;
+  text-decoration: none;
+}
+.enebular-logo img {
+  height: 25px;
+}
+
+/* Admin Tab*/
+
+
+.enebular-admin-wrapper {
+  margin: 4px 8px;
+}
+
+.enebular-admin-install-panel {
+  margin-bottom: 4px;
+}
+
+.enebular-admin-module-list {
+  font-size: 16px;
+  border: solid 2px #ddd;
+}
+
+.enebular-admin-module-list tr {
+  border: solid 2px #ddd;
+}
+
+.enebular-admin-module-list td {
+  border: solid 1px #eee;
+}
+
+.enebular-admin-search-item {
+  cursor: pointer;
+}
+
+.enebular-admin-search-item:hover {
+  background-color: #f2f2f2;
+}
+
+
+.enebular-admin-module {
+
+}
+
+.enebular-admin-enable-checkbox {
+
+}
+
+.enebular-admin-install-btn {
+  width: 80%;
+  margin: 0 6%;
+  color: #666;
+  background: #f3f3f3;
+  border: solid 1px #666;
+}
+
+.enebular-admin-delete-btn {
+  cursor: pointer;  
+  color: #666;
+}
