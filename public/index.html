@@ -357,7 +357,7 @@ function admin_refresh() {
         str += '<table class="enebular-admin-module-list">';
         str += nodes.map(function(n) {
             var checked=n.enabled?'checked="checked"':'';
-            return '<tr class="enebular-admin-module"><td><input type="checkbox" '+checked+' data-cid="'+n.module+'" class="enebular-admin-enable-checkbox" /></td><td>'+n.name+'</td><td><div data-cid="'+n.module+'" class="enebular-admin-delete-btn">x</div></td></tr>';
+            return '<tr class="enebular-admin-module"><td><input type="checkbox" '+checked+' data-cid="'+n.id+'" class="enebular-admin-enable-checkbox" /></td><td>'+n.name+'</td><td><div data-cid="'+n.module+'" class="enebular-admin-delete-btn">x</div></td></tr>';
         }).join('');
         str += '</table>';
         $('#tab-admin').html('<div class="enebular-admin-wrapper">'+str+'</div>');
