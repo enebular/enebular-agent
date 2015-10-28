@@ -174,7 +174,7 @@
 <script src="vendor/vendor.js"></script>
 <script src="vendor/ace/ace.js"></script>
 <script src="vendor/ace/ext-language_tools.js"></script>
-<script src="red/red.min.js"></script>
+<script src="red/red.js"></script>
 <script>
 
 window.document.onkeydown = keys;
@@ -353,43 +353,116 @@ function onAdminInit() {
 
 function admin_refresh() {
     get_nodes(function(err, nodes) {
-        var str = '<div class="enebular-admin-install-panel"><input id="admin-module-name" type="text" value="node-red-contrib-"/><div id="admin-search-result"></div><button id="admin-install-btn" class="enebular-admin-install-btn">Install</button></div>';
-        str += '<table class="enebular-admin-module-list">';
-        str += nodes.map(function(n) {
-            var checked=n.enabled?'checked="checked"':'';
-            return '<tr class="enebular-admin-module"><td><input type="checkbox" '+checked+' data-cid="'+n.id+'" class="enebular-admin-enable-checkbox" /></td><td>'+n.name+'</td><td><div data-cid="'+n.module+'" class="enebular-admin-delete-btn">x</div></td></tr>';
-        }).join('');
-        str += '</table>';
+        var modules = {}
+           ,nodesEl = {}
+           ;
+
+        nodes.map(function(node){
+            modules[node.module] = node.module;
+            nodesEl[node.module] = '';
+        });
+
+        // install panel
+        var str  = '<div class="enebular-admin-install-panel">'
+                 +   '<div class="enebular-admin-search">'
+                 +     '<input id="admin-search-module-name" type="text" value="node-red-contrib-" class="enebular-admin-search-input" />'
+                 +     '<div id="admin-search-result" class="enebular-admin-search-result"></div>'
+                 +   '</div>'
+                 +   '<button id="admin-install-btn" class="enebular-admin-install-btn btn" disabled>Install</button>'
+                 + '</div>';
+
+        str     += '<hr class="enebular-hr">';
+
+        // module list
+        str     += '<ul class="enebular-admin-module-list">';
+
+        // node
+        nodes.forEach(function(n) {
+            var checked = n.enabled ? 'checked="checked"' : '';
+            var isDisabled = !n.enabled ? ' is-disabled' : '';
+
+            nodesEl[n.module] +=
+              '<li class="enebular-admin-node">'
+            +   '<input type="checkbox" name="enebularAdminSwitch" id="enebularAdminSwitch-'+n.name+'" '+checked+' data-cid="'+n.id+'" class="enebular-admin-switch" />'
+            +   '<label for="enebularAdminSwitch-'+n.name+'" class="enebular-admin-switchLabel"></label>'
+            +   '<span class="enebular-admin-node-name'+isDisabled+'" id="enebularAdminModuleName-'+n.name+'">'+n.name+'</span>'
+            + '</li>';
+        });
+
+        // module > node
+        Object.keys(modules).forEach(function(key) {
+            var deleteBtn = !(key === 'node-red') ? '<div data-cid="'+key+'" class="enebular-admin-delete-btn">×</div>' : '';
+
+            str += '<div class="enebular-admin-moduleWrapper">'
+                 +   '<div class="enebular-admin-module">'
+                 +     '<div class="enebular-admin-module-title">'+key+'</div>'
+                 +     deleteBtn
+                 +     '<ul class="enebular-admin-node-list" id="enebularAdminModule-'+key+'">'
+                 +       nodesEl[key]
+                 +     '</ul>'
+                 +   '</div>'
+                 + '</div>';
+        }, modules);
+
+        str += '</ul>';
+
+
         $('#tab-admin').html('<div class="enebular-admin-wrapper">'+str+'</div>');
-        $('#admin-module-name').keyup(function(e) {
-            var name = $('#admin-module-name').val();
+
+        $('#admin-search-module-name').keyup(function(e) {
+            var name = $(this).val();
+            $("#admin-install-btn").prop("disabled", true);
             search_module(name, function(err, content) {
                 if(err) {
-                    $('#admin-search-result').html('<div>Not Found</div>');
+                    $('#admin-search-result').html('<div class="enebular-admin-search-item not-found">Not Found</div>');
+                     $('#admin-search-result').html('');
+                     $('#admin-search-result').removeClass('is-shown');
                     return;
                 }
                 var html = content.map(function(m) {
                     return '<div class="enebular-admin-search-item">'+m+'</div>';
                 }).join('');
                 $('#admin-search-result').html(html);
-                $('.enebular-admin-search-item').click(function(e) {
-                    var module_name = $(this).text();
-                    $('#admin-module-name').val(module_name);
-                });
+                $('#admin-search-result').addClass('is-shown');
             });
         });
+
+        $('#admin-search-result').on('click', '.enebular-admin-search-item', function(e) {
+            var module_name = $(this).html();
+            $("#admin-install-btn").prop("disabled", false);
+            $('#admin-search-module-name').val(module_name);
+            $('#admin-search-result').html('');
+            $('#admin-search-result').removeClass('is-shown');
+        });
+
+        $('#admin-search-module-name').blur(function(e){
+            setTimeout(function(){
+                $('#admin-search-result').html('');
+                $('#admin-search-result').removeClass('is-shown');
+            }, 250);
+        });
+
         $('#admin-install-btn').click(function(e) {
-            var name = $('#admin-module-name').val();
+            var name = $('#admin-search-module-name').val();
             install_node(name, function() {console.log('success');admin_refresh();});
         });
-        $('.enebular-admin-enable-checkbox').click(function(e) {
+
+        $('.enebular-admin-switch').change(function(e) {
             var module = $(this).data('cid');
             var enabled = $(this).is(':checked');
+            var id = $(this).attr("id");
+
+            var moduleName = id.replace(/^enebularAdminSwitch-/, '');
+
+            if(enabled) $('#enebularAdminModuleName-'+moduleName).removeClass('is-disabled');
+            else $('#enebularAdminModuleName-'+moduleName).addClass('is-disabled');
+
             edit_node(module, enabled, function() {console.log('success');});
         });
+
         $('.enebular-admin-delete-btn').click(function(e) {
             var module = $(this).data('cid');
-            remove_node(module, function() {console.log('success');admin_refresh();});
+            if(window.confirm('“'+module+'” モジュールを削除してもよろしいですか？')) remove_node(module, function() {console.log('success');admin_refresh();});
         });
     });
 }
