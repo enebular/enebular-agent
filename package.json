@@ -15,7 +15,7 @@
     "express-session": "^1.11.3",
     "jsonwebtoken": "^5.0.4",
     "mongodb": "~1.4.x",
-    "node-red": "~0.10.x",
+    "node-red": "^0.11.2",
     "request": "^2.65.0",
     "uuid": "^2.0.1",
     "when": "~3.x"

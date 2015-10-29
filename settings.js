@@ -10,6 +10,15 @@ var settings = {
   httpNodeCors: {
     origin: "*",
     methods: "GET,PUT,POST,DELETE"
+  },
+  swagger: {
+    template: {
+      swagger: "2.0",
+      info: {
+        title: "My Node-RED API",
+        version: "0.0.1"
+      }
+    }
   }
 };
 
