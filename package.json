@@ -16,6 +16,7 @@
     "jsonwebtoken": "^5.0.4",
     "mongodb": "~1.4.x",
     "node-red": "~0.10.x",
+    "request": "^2.65.0",
     "uuid": "^2.0.1",
     "when": "~3.x"
   },
