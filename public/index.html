@@ -186,7 +186,7 @@ function keys(event){
   // キーイベントが発生した対象のオブジェクト
   var obj = event.target;
 
-  console.log('event.target is ::', obj, obj.tagName);
+  //console.log('event.target is ::', obj, obj.tagName);
 
   // バックスペースキーを制御する
   if(keyCode == 8){
@@ -235,25 +235,23 @@ hook.addHook(RED.user, 'init', function() {}, function() {
 
 hook.addHook(RED.sidebar, 'init', function() {}, function() {
     onAdminInit();
+    onFlowInit();
 });
 
 //RED.sidebar.config
 
 function EnebularTransporter() {
     var current_timer = null;
-    var onSuccess = null;
-    var onError = null;
+    var callbacks = {};
     window.addEventListener('message', function(e) {
-        switch(e.data.event) {
-            case 'flowadded':
-                if(e.data.body.err) {
-                    if(onError) onError();
-                }else{
-                    if(onSuccess) onSuccess();
-                }
-                clearTimeout(current_timer);
-                break;
+        var cbs = callbacks[e.data.event];
+        if(!cbs) return;
+        if(e.data.body.err) {
+            if(cbs.onError) cbs.onError();
+        }else{
+            if(cbs.onSuccess) cbs.onSuccess(e.data.body.content);
         }
+        clearTimeout(current_timer);
     });
     return {
         load : function() {
@@ -266,17 +264,28 @@ function EnebularTransporter() {
                 event : 'flowadded',
                 body : body
             }, ENEBULAR_URL);
-            onSuccess = _onSuccess;
-            onError = _onError;
+            callbacks['flowadded'] = {
+                onSuccess : _onSuccess,
+                onError : _onError
+            }
+            current_timer = setTimeout(onTimeout, 3000);
+        },
+        searchFlow : function(tag, _onSuccess, _onError, onTimeout) {
+            window.parent.postMessage({
+                event : 'searchflow',
+                body : {
+                    tag : tag
+                }
+            }, ENEBULAR_URL);
+            callbacks['searchflow'] = {
+                onSuccess : _onSuccess,
+                onError : _onError
+            }
             current_timer = setTimeout(onTimeout, 3000);
         }
     }
 }
 
-function onImportSelected() {
-    RED.view.importNodes(data);
-
-}
     function onselectHandler(){
         var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
         $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
@@ -350,6 +359,13 @@ function onAdminInit() {
     RED.sidebar.show('info');
     admin_refresh();
 }
+
+function onFlowInit() {
+    RED.sidebar.addTab('flow', '<div id="tab-flow" style="display:none;">Flow</div>');
+    RED.sidebar.show('info');
+    flow_refresh();
+}
+
 
 function admin_refresh() {
     get_nodes(function(err, nodes) {
@@ -526,14 +542,41 @@ function admin_base(url, method, body, cb) {
         cache: false,
         url: url,
         success: function(data) {
-            console.log("nodes", data);
+            //console.log("nodes", data);
             cb(null, data);
         }
     });
 }
 
-
-
+function flow_refresh() {
+    var flows = {};
+    var str = '<input id="flow-search-module-name" type="text" placeholder="tag" value="" class="enebular-admin-search-input" />'+
+    '<div id="enebular-flow-items" class="enebular-flow-list"></div>';
+   $('#tab-flow').html('<div class="enebular-admin-wrapper">'+str+'</div>');
+    $('#flow-search-module-name').keyup(function(e) {
+        var tag = $(this).val();
+        searchFlow(tag);
+    });
+    searchFlow('');
+    function searchFlow(tag) {
+        enebularTransporter.searchFlow(tag, function(content) {
+            content.forEach(function(f) {
+                flows[f.id] = f;
+            });
+            var str = content.map(function(flow) {
+                return '<div class="enebular-flow-itemWrapper"><div class="enebular-flow-item"><div class="enebular-flow-item-title">'+flow.title+'</div><div class="enebular-flow-item-body"><div>'+flow.description+'</div><div class="enebular-flow-import-button" data-cid="'+flow.id+'">Import</div></div></div></div>';
+            });
+            $('#enebular-flow-items').html(str);
+            $('.enebular-flow-import-button').click(function() {
+                var flowId = $(this).data('cid');
+                importNode(flows[flowId].body);
+            });
+        });
+    }
+    function importNode(body) {
+        RED.view.importNodes(body);
+    }
+}
 
 </script>
 </body>

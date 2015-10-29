@@ -208,3 +208,32 @@
 .enebular-admin-enable-checkbox {
 
 }
+
+.enebular-flow-list{
+  margin: 0; }
+
+.enebular-flow-itemWrapper{
+  position: relative;
+  margin-bottom: 12px; }
+
+.enebular-flow-item{
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px; }
+
+.enebular-flow-item-title{
+  margin: -6px -6px 6px;
+  padding: 8px;
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #ddd; }
+
+.enebular-flow-item-body{
+
+}
+
+.enebular-flow-import-button {
+  cursor: pointer;
+  color: #70ffa0;
+  position: absolute;
+  top: 9px;
+  right: 14px; }
