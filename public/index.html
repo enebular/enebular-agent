@@ -564,7 +564,14 @@ function flow_refresh() {
                 flows[f.id] = f;
             });
             var str = content.map(function(flow) {
-                return '<div class="enebular-flow-itemWrapper"><div class="enebular-flow-item"><div class="enebular-flow-item-title">'+flow.title+'</div><div class="enebular-flow-item-body"><div>'+flow.description+'</div><div class="enebular-flow-import-button" data-cid="'+flow.id+'">Import</div></div></div></div>';
+                var tags_html = '';
+                if(flow.tags.filter(function(t){return t.length > 0;}).length > 0) {
+                    tags_html = flow.tags.map(function(tag) {
+                        return '<span class="enebular-flow-item-tag">'+tag+'</span>';
+                    }).join('');
+                    tags_html = '<div class="enebular-flow-item-tags">'+tags_html+'</div>';
+                }
+                return '<div class="enebular-flow-itemWrapper"><div class="enebular-flow-item"><div class="enebular-flow-item-title">'+flow.title+'</div><div class="enebular-flow-item-body"><div>'+flow.description+'</div>'+tags_html+'<div class="enebular-flow-import-button" data-cid="'+flow.id+'">Import</div></div></div></div>';
             });
             $('#enebular-flow-items').html(str);
             $('.enebular-flow-import-button').click(function() {

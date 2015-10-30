@@ -214,6 +214,7 @@
 
 .enebular-flow-itemWrapper{
   position: relative;
+  margin-top: 6px;
   margin-bottom: 12px; }
 
 .enebular-flow-item{
@@ -230,6 +231,17 @@
 .enebular-flow-item-body{
 
 }
+
+.enebular-flow-item-tags {
+  color: #333;
+  position: absolute;
+  top: 38px;
+  right: 14px; }
+
+.enebular-flow-item-tag {
+  background-color: #f3f3f3;
+  border: 1px solid #ddd;
+  border-radius: 3px; }
 
 .enebular-flow-import-button {
   cursor: pointer;
