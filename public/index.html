@@ -425,6 +425,11 @@ function admin_refresh() {
 
         $('#tab-admin').html('<div class="enebular-admin-wrapper">'+str+'</div>');
 
+        $('#admin-search-module-name').focus(function (e) {
+            RED.keyboard.remove(/* backspace */ 8);
+            RED.keyboard.remove(/* delete */ 46);
+        });
+
         $('#admin-search-module-name').keyup(function(e) {
             var name = $(this).val();
             $("#admin-install-btn").prop("disabled", true);
@@ -552,7 +557,12 @@ function flow_refresh() {
     var flows = {};
     var str = '<input id="flow-search-module-name" type="text" placeholder="tag" value="" class="enebular-admin-search-input" />'+
     '<div id="enebular-flow-items" class="enebular-flow-list"></div>';
-   $('#tab-flow').html('<div class="enebular-admin-wrapper">'+str+'</div>');
+    $('#tab-flow').html('<div class="enebular-admin-wrapper">'+str+'</div>');
+
+    $('#flow-search-module-name').focus(function (e) {
+        RED.keyboard.remove(/* backspace */ 8);
+        RED.keyboard.remove(/* delete */ 46);
+    });
     $('#flow-search-module-name').keyup(function(e) {
         var tag = $(this).val();
         searchFlow(tag);
