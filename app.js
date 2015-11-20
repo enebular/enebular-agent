@@ -11,7 +11,9 @@ var app = express();
 
 var server = null;
 if(process.env.REDIRECT_URI.match("^https://localhost")) {
-  server = createHttpsServer();
+  server = createHttpsServer(__dirname + '/ssl/localhost.key', __dirname + '/ssl/localhost.crt');
+}else if(process.env.TLS_KEY && process.env.TLS_CERT) {
+  server = createHttpsServer(process.env.TLS_KEY, process.env.TLS_CERT);
 }else{
   server = createHttpServer();
 }
@@ -21,14 +23,14 @@ function createHttpServer() {
   return http.createServer(app);
 }
 
-function createHttpsServer() {
+function createHttpsServer(key, cert) {
   console.log("Create Self Signed HTTPS Server");
   var options = {
-    key: fs.readFileSync(__dirname + '/ssl/localhost.key'),
-    cert: fs.readFileSync(__dirname + '/ssl/localhost.crt'),
+    key: fs.readFileSync(key),
+    cert: fs.readFileSync(cert),
     ciphers: 'ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES256-SHA384',
     honorCipherOrder: true,
-    secureProtocol: 'TLSv1_2_method',
+/*    secureProtocol: 'TLSv1_2_method',*/
     requestCert: false,
     rejectUnauthorized: false
   };
