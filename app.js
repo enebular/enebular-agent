@@ -9,6 +9,15 @@ var settings = require('./settings');
 var bodyParser = require('body-parser');
 var app = express();
 
+
+/*
+pattern 1（自己証明書&localhost）
+ REDIRECT_URI=https://localhost
+pattern 2（自己証明書&localhost以外）
+ REDIRECT_URI=https://{foo.com} TLS_KEY=./ssl/localhost.key TLS_CERT=./ssl/localhost.crt
+pattern 3（heroku）
+ REDIRECT_URI=https://{foo.com}
+*/
 var server = null;
 if(process.env.REDIRECT_URI.match("^https://localhost")) {
   server = createHttpsServer(__dirname + '/ssl/localhost.key', __dirname + '/ssl/localhost.crt');
@@ -30,7 +39,7 @@ function createHttpsServer(key, cert) {
     cert: fs.readFileSync(cert),
     ciphers: 'ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES256-SHA384',
     honorCipherOrder: true,
-/*    secureProtocol: 'TLSv1_2_method',*/
+    secureProtocol: 'TLSv1_2_method',
     requestCert: false,
     rejectUnauthorized: false
   };
