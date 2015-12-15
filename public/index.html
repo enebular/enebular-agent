@@ -278,6 +278,7 @@ function EnebularTransporter() {
             }
         },
         searchFlow : function(tag, onTimeout) {
+            console.log(tag);
             window.parent.postMessage({
                 event : 'searchflow',
                 body : {
@@ -581,6 +582,15 @@ FlowTab.prototype.init = function() {
         RED.keyboard.remove(/* delete */ 46);
     });
     
+    $('#flow-search-module-name').keyup(function (e) {
+        var tag = $('#flow-search-module-name').val();
+        console.log( tag );
+        if(tag == '')
+            that.searchFlow('');
+        else
+            that.searchFlow(tag);
+    });
+
     that.initSearchFlowCallback();
     that.searchFlow('');
 }
