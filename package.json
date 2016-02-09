@@ -17,6 +17,7 @@
     "ejs": "^2.3.4",
     "express": "~4.x",
     "express-session": "^1.11.3",
+    "fs-extra": "^0.26.5",
     "jsonwebtoken": "^5.0.4",
     "mongodb": "~1.4.x",
     "node-red": "~0.12.x",

@@ -1,13 +1,40 @@
-var fs = require('fs');
+#!/usr/bin/env node
+
+var fs = require("fs-extra");
 var path = require('path');
 var http = require('http');
 var https = require('https');
 var express = require('express');
 var session = require('express-session');
 var RED = require('node-red');
-var settings = require('./settings');
+var settings = getSettings();
 var bodyParser = require('body-parser');
 var app = express();
+
+
+function getSettings() {
+  var settingsFile;
+  var userDir = path.join(process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE, ".enebular-agent");
+  var userSettingsFile = path.join(userDir, "settings.js");
+  if (fs.existsSync(userSettingsFile)) {
+      // $HOME/.enebular-agent/settings.js exists
+      settingsFile = userSettingsFile;
+  } else {
+      var defaultSettings = path.join(__dirname, "settings.js");
+      var settingsStat = fs.statSync(defaultSettings);
+      if (settingsStat.mtime.getTime() < settingsStat.ctime.getTime()) {
+          // Default settings file has not been modified - safe to copy
+          fs.copySync(defaultSettings, userSettingsFile);
+          settingsFile = userSettingsFile;
+      } else {
+          // Use default settings.js as it has been modified
+          settingsFile = defaultSettings;
+      }
+  }
+  var settings = require( settingsFile );
+  settings.userDir = userDir;
+  return settings
+}
 
 
 /*
@@ -52,19 +79,21 @@ app.use(bodyParser.urlencoded({
 
 app.use(session({ secret: '4r13ysgyYD' }));
 
-var store = require('./store');
+var store = require('./store')(settings);
 var agentIdUtil = require('./server/agentid');
 var searchModule = require('./server/search');
 
+settings.nodesDir = path.join(__dirname, settings.nodesPath || 'nodes');
+
 store.init(function(err) {
   if(err) throw err;
-  agentIdUtil.init();
+  agentIdUtil.init(store);
 });
 
 var JWTAuth = require('./auth/jwt');
 
 if (process.env.PUBLIC_KEY_PATH) {
-  app.all("/red/*", JWTAuth(process.env.PUBLIC_KEY_PATH, {
+  app.all("/red/*", JWTAuth(process.env.PUBLIC_KEY_PATH, store, {
     issuer: process.env.ISSUER
   }));
 } else if (process.env.NODE_RED_USERNAME && process.env.NODE_RED_PASSWORD) {

@@ -1,9 +1,8 @@
 var fs = require('fs');
 var path = require('path');
 var mongodb = require('mongodb');
-var settings = require('./settings');
 
-function FileStore() {
+function FileStore(settings) {
 	var dataDir = path.join(settings.userDir, 'data');
 	return {
 		init : function(cb) {
@@ -35,7 +34,8 @@ function FileStore() {
 	}
 }
 
-function MongoStore(url) {
+function MongoStore(settings) {
+	var url = settings.mongoUrl;
 	var db = null;
 	return {
 		init : function(cb) {
@@ -77,8 +77,11 @@ function MongoStore(url) {
 	}
 }
 
-if (settings.mongoUrl) {
-	module.exports = MongoStore(settings.mongoUrl);
-}else{
-	module.exports = FileStore();
+
+module.exports = function(settings) {
+	if (settings.mongoUrl) {
+		return MongoStore(settings);
+	}else{
+		return FileStore(settings);
+	}
 }

@@ -1,8 +1,7 @@
 var fs = require('fs');
 var jwt = require('jsonwebtoken');
-var store = require('../store');
 
-module.exports = function(publicKeyPath, options) {
+module.exports = function(publicKeyPath, store, options) {
   var publicKey = fs.readFileSync(publicKeyPath, 'utf8');
   return function authenticate(req, res, next) {
     if (!req.session) {

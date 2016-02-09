@@ -1,9 +1,8 @@
 var uuid = require('uuid');
-var store = require('../store');
 
 module.exports = {
 	agent_id : null,
-	init : function(cb) {
+	init : function(store, cb) {
 		var that = this;
 		store.get('agentid', function(err, agent_id) {
 			if(err) {
