@@ -7,6 +7,7 @@ var settings = {
   httpAdminRoot: '/red',
   httpNodeRoot: '/',
   nodesPath: 'nodes',
+  //nodesDir: '', <-enebular agentでは決めうちのはず
   functionGlobalContext: { },    // enables global context
   httpNodeCors: {
     origin: "*",
