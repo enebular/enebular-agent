@@ -1,0 +1,323 @@
+<script type="text/javascript">
+
+var ENEBULAR_URLS = ['https://enebular.com','http://enebular.com','https://enebular-staging.herokuapp.com','http://enebular-staging.herokuapp.com','http://localhost:7000']
+
+var ENEBULAR_URL = 'https://enebular.com';
+//var ENEBULAR_URL = 'http://localhost:7000';
+
+RED.nodes.registerType('enebular',{
+    category: 'function',
+    color: '#a6bbcf',
+    defaults: {
+        url: {value:'https://enebular.com'}
+    },
+    inputs:1,
+    outputs:1,
+    icon: "file.png",
+    label: function() {
+        return this.name || 'enebular';
+    },
+    oneditprepare: function () {
+    },
+    onpaletteadd: function () {
+      RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "enebular", onselect: onselectHandler });
+        function onselectHandler(){
+          var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
+          console.log(nns);
+        }
+
+    },
+    oneditsave: function() {
+      var node = this;
+      var url = $("#node-input-url").val();
+      node.url = url;
+      ENEBULAR_URL = url;
+      console.log(ENEBULAR_URL);
+      init(url);
+    }
+});
+
+function admin_get(url, cb) {
+    admin_base(url, 'GET', null, cb);
+}
+
+function admin_base(url, method, body, cb) {
+    var auth_tokens = RED.settings.get("auth-tokens");
+    var headers = {
+        "Accept":"application/json",
+    }
+    if(auth_tokens) {
+        headers["Authorization"] = "Bearer "+auth_tokens.access_token;
+    }
+    $.ajax({
+        headers: headers,
+        contentType: 'application/json',
+        type: method,
+        data: body,
+        cache: false,
+        url: url,
+        success: function(data) {
+            //console.log("nodes", data);
+            cb(null, data);
+        }
+    });
+}
+
+
+function EnebularTransporter() {
+    var current_timer = null;
+    var callbacks = {};
+    window.addEventListener('message', function(e) {
+        console.log(e.data);
+        var cbs = callbacks[e.data.event];
+        if(!cbs) return;
+        if(e.data.body.err) {
+            if(cbs.onError) cbs.onError();
+        }else{
+            if(cbs.onSuccess) cbs.onSuccess(e.data.body.content);
+        }
+        if(cbs.current_timer) clearTimeout(cbs.current_timer);
+    });
+    return {
+        postMessage : function(mes) {
+            window.parent.postMessage(mes, ENEBULAR_URL);
+        },
+        load : function(cb) {
+            this.postMessage({
+                event : 'loaded',
+            });
+            callbacks['loaded'] = {
+                onSuccess : cb,
+                onError : function() {},
+                current_timer : setTimeout(function() {
+                    RED.notify("Failed connecting to enebular. Please access "+ENEBULAR_URL, "error");
+                }, 3000)
+            }
+        },
+        addFlow : function(body, _onSuccess, _onError, onTimeout) {
+            this.postMessage({
+                event : 'flowadded',
+                body : body
+            });
+            callbacks['flowadded'] = {
+                onSuccess : _onSuccess,
+                onError : _onError,
+                current_timer : setTimeout(onTimeout, 3000)
+            }
+        },
+        addSearchFlowListener : function(_onSuccess, _onError) {
+            callbacks['searchflow'] = {
+                onSuccess : _onSuccess,
+                onError : _onError
+            }
+        },
+        searchFlow : function(tag, onTimeout) {
+            this.postMessage({
+                event : 'searchflow',
+                body : {
+                    tag : tag
+                },
+                current_timer : setTimeout(onTimeout, 3000)
+            });
+        }
+    }
+}
+
+function onFlowInit(flowTab) {
+    var flowTabDom = $('<div/>', {'id': 'tab-flow'});
+    RED.sidebar.addTab('flow', flowTabDom[0]);
+    flowTab.init();
+}
+
+function FlowTab(enebularTransporter) {
+    this.enebularTransporter = enebularTransporter;
+    this.flows = {};
+}
+
+FlowTab.prototype.init = function() {
+    var that = this;
+    var str
+    = '<input id="flow-search-module-name" type="text" placeholder="Filter flows by tags..." value="" class="enebular-flow-search-input" />'
+    + '<hr class="enebular-hr">'
+    + '<div id="enebular-flow-items" class="enebular-flow-list"></div>';
+
+    $('#tab-flow').html(
+          '<div class="enebular-admin-wrapper">'
+        +   str
+        + '</div>'
+    );
+
+    $('#flow-search-module-name').focus(function (e) {
+        RED.keyboard.remove(/* backspace */ 8);
+        RED.keyboard.remove(/* delete */ 46);
+    });
+    
+    $('#flow-search-module-name').keyup(function (e) {
+        var tag = $('#flow-search-module-name').val();
+        console.log( tag );
+        if(tag == '')
+            that.searchFlow('');
+        else
+            that.searchFlow(tag);
+    });
+
+    that.initSearchFlowCallback();
+    that.searchFlow('');
+}
+
+FlowTab.prototype.initSearchFlowCallback = function() {
+    var that = this;
+    that.enebularTransporter.addSearchFlowListener(function(content) {
+        content.forEach(function(f) {
+            that.flows[f.id] = f;
+        });
+
+
+        var str = '<h3 class="enebular-flow-headline">Enebular flows</h3>';
+
+        str += content.map(function(flow) {
+
+            var tags_html = '';
+
+            if(flow.tags.filter(function(t){return t.length > 0;}).length > 0) {
+                tags_html = flow.tags.map(function(tag) {
+                    return '<span class="enebular-flow-item-tag">'+tag+'</span>';
+                }).join(', ');
+                tags_html = '<div class="enebular-flow-item-tags">Tags: '+tags_html+'</div>';
+            }
+
+            var reader = '…';
+            var wordCount = 100;
+            var textTrim = flow.description.substr(0, wordCount);
+            flow.description = (wordCount < flow.description.length)
+                               ? flow.description.substr(0, wordCount) + reader
+                               : flow.description;
+
+            return '<div class="enebular-flow-itemWrapper">'
+            + '<div class="enebular-flow-item">'
+            +   '<div class="enebular-flow-item-title">'
+            +     flow.title
+            +   '</div>'
+            +   '<div class="enebular-flow-item-body">'
+            +     '<div class="enebular-flow-item-desc">'
+            +       flow.description
+            +     '</div>'
+            +     tags_html
+            +     '<div class="enebular-flow-import-button" data-cid="'+flow.id+'"><i class="fa fa-download" title="Import this flow" aria-label="Import this flow"></i>'
+            +     '</div>'
+            +   '</div>'
+            + '</div>'
+            +'</div>';
+
+        }).join('');
+
+        $('#enebular-flow-items').html(str);
+
+        $('.enebular-flow-import-button').click(function() {
+            var flowId = $(this).data('cid');
+            that.importNode(that.flows[flowId].body);
+        });
+    });
+}
+
+FlowTab.prototype.searchFlow = function(tag) {
+    this.enebularTransporter.searchFlow(tag);
+}
+
+FlowTab.prototype.importNode = function(body) {
+    RED.view.importNodes(body);
+}
+
+var enebularTransporter = new EnebularTransporter();
+var loaded = false;
+init();
+
+function init(url) {
+  if(loaded) {
+    console.log('already loaded');
+  }
+  admin_get('/sys/enebularurl', function(err, data) {
+    ENEBULAR_URL = data;
+    enebularTransporter.load(function() {
+      loaded = true;
+      var flowTab = new FlowTab(enebularTransporter);
+      onFlowInit(flowTab);
+      RED.view.redraw();
+    }); 
+  })
+}
+
+</script>
+
+<style>
+.enebular-flow-search-input {
+  box-sizing: border-box;
+  height: 30px !important;
+  width: 100%;
+  margin-bottom: 0 !important;
+  margin-top: 8px; }
+
+.enebular-flow-headline {
+  color: #666;
+  font-size: 15px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  line-height: 1.3; }
+
+.enebular-flow-list{
+  margin: 0; }
+
+.enebular-flow-itemWrapper{
+  position: relative;
+  margin-top: 6px;
+  margin-bottom: 12px; }
+
+.enebular-flow-item{
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px; }
+
+.enebular-flow-item-title{
+  margin: -6px -6px 6px;
+  padding: 8px 24px 8px 8px;
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #ddd; }
+
+.enebular-flow-item-body{
+  }
+
+.enebular-flow-item-desc{
+  padding-bottom: 5px; }
+
+.enebular-flow-item-tags {
+  border-top: 1px solid #ddd;
+  padding-top: 5px;
+  font-style: italic;
+  font-size: 90%;
+  color: #999; }
+
+.enebular-flow-item-tag {
+/*  background-color: #f3f3f3;
+  border: 1px solid #ddd;
+  padding: 2px 4px;
+  border-radius: 3px;*/ }
+
+.enebular-flow-import-button {
+  cursor: pointer;
+  position: absolute;
+  top: 9px;
+  right: 14px; }
+
+
+</style>
+
+<script type="text/x-red" data-template-name="enebular">
+    <div class="form-row">
+        <label for="node-input-url"><i class="icon-tag"></i> URL</label>
+        <input type="text" id="node-input-url" placeholder="URL">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="enebular">
+    <p>A simple node that converts the message payloads into all lower-case characters</p>
+</script>

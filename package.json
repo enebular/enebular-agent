@@ -9,7 +9,7 @@
   },
   "main": "app.js",
   "bin": {
-    "flower-lang": "./app.js"
+    "enebular-agent": "./app.js"
   },
   "dependencies": {
     "bcryptjs": "^2.3.0",
@@ -20,6 +20,8 @@
     "jsonwebtoken": "^5.0.4",
     "mongodb": "~1.4.x",
     "node-red": "~0.12.x",
+    "node-red-contrib-admin": "0.0.2",
+    "node-red-contrib-metrics": "0.0.1",
     "request": "^2.65.0",
     "uuid": "^2.0.1",
     "when": "~3.x"

@@ -11,7 +11,6 @@
 <link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
 <link rel="stylesheet" href="vendor/vendor.css">
 <link rel="stylesheet" href="red/style.min.css">
-<link rel="stylesheet" href="metricsgraphics.css">
 <link rel="stylesheet" href="enebular-nodered.css">
 <link rel="shortcut icon" href="favicon.ico">
 </head>
@@ -28,7 +27,12 @@
         <div id="palette-container" class="palette-scroll">
         </div>
         <div id="palette-search">
-            <i class="fa fa-search"></i><input id="palette-search-input" type="text" placeholder="filter"><a href="#" id="palette-search-clear"><i class="fa fa-times"></i></a></input>
+            <i class="fa fa-search"></i><input id="palette-search-input" type="text" data-i18n="[placeholder]palette.filter"><a href="#" id="palette-search-clear"><i class="fa fa-times"></i></a></input>
+        </div>
+        <div id="palette-container" class="palette-scroll"></div>
+        <div id="palette-footer">
+            <a class="palette-button" id="palette-collapse-all" href="#"><i class="fa fa-angle-double-up"></i></a>
+            <a class="palette-button" id="palette-expand-all" href="#"><i class="fa fa-angle-double-down"></i></a>
         </div>
     </div><!-- /palette -->
 
@@ -37,24 +41,21 @@
         <div id="workspace-add-tab"><a id="btn-workspace-add-tab" href="#"><i class="fa fa-plus"></i></a></div>
         <div id="chart"></div>
         <div id="workspace-toolbar">
-            <a class="button" id="workspace-subflow-edit" href="#"><i class="fa fa-pencil"></i> edit name</a>
-            <a class="button disabled" id="workspace-subflow-add-input" href="#"><i class="fa fa-plus"></i> input</a>
-            <a class="button" id="workspace-subflow-add-output" href="#"><i class="fa fa-plus"></i> output</a>
-            <a class="button" id="workspace-subflow-delete" href="#"><i class="fa fa-trash"></i> delete subflow</a>
+        </div>
+        <div id="workspace-footer">
+            <a class="workspace-footer-button" id="btn-zoom-out" href="#"><i class="fa fa-minus"></i></a>
+            <a class="workspace-footer-button" id="btn-zoom-zero" href="#"><i class="fa fa-circle-o"></i></a>
+            <a class="workspace-footer-button" id="btn-zoom-in" href="#"><i class="fa fa-plus"></i></a>
         </div>
     </div>
 
     <div id="chart-zoom-controls">
-        <div class="btn-group">
-            <a class="btn btn-mini" id="btn-zoom-out" href="#"><i class="fa fa-search-minus"></i></a>
-            <a class="btn btn-mini" id="btn-zoom-zero" href="#"><i class="fa fa-dot-circle-o"></i></a>
-            <a class="btn btn-mini" id="btn-zoom-in" href="#"><i class="fa fa-search-plus"></i></a>
-        </div>
     </div>
 
     <div id="sidebar">
         <ul id="sidebar-tabs"></ul>
         <div id="sidebar-content"></div>
+        <div id="sidebar-footer"></div>
     </div>
 
     <div id="sidebar-separator"></div>
@@ -62,50 +63,58 @@
 </div>
 
 <div id="notifications"></div>
-<div id="dropTarget"><div>Drop the flow here<br/><i class="fa fa-download"></i></div></div>
-<div id="shade"></div>
+<div id="dropTarget"><div data-i18n="[append]workspace.dropFlowHere"><br/><i class="fa fa-download"></i></div></div>
 
 <div id="dialog" class="hide"><form id="dialog-form" class="form-horizontal"></form></div>
-<div id="node-config-dialog" class="hide"><form id="dialog-config-form" class="form-horizontal"></form><div class="form-tips" id="node-config-dialog-user-count"></div></div>
+<div id="node-config-dialog" class="hide"><form id="dialog-config-form" class="form-horizontal"><div id="node-config-dialog-edit-form"></div><!--<div id="node-config-dialog-toolbar" class="form-row"><label><span>Node scope</span></label><select id="node-config-dialog-scope"></select></div>--></form></div>
+
 <div id="subflow-dialog" class="hide">
     <form class="form-horizontal">
         <div class="form-row">
-            <label>Name</label><input type="text" id="subflow-input-name">
+            <label for="subflow-input-name" data-i18n="common.label.name"></label><input type="text" id="subflow-input-name">
         </div>
+        <div class="form-row" style="margin-bottom: 0px;">
+            <label for="subflow-input-info" data-i18n="subflow.info"></label>
+            <a href="https://help.github.com/articles/markdown-basics/" style="font-size: 0.8em; float: right;" data-i18n="[html]subflow.format"></a>
+        </div>
+        <div class="form-row node-text-editor-row">
+            <div style="height: 250px;" class="node-text-editor" id="subflow-input-info-editor"></div>
+        </div>
+        <div class="form-row form-tips" id="subflow-dialog-user-count"></div>
     </form>
-    <div class="form-tips" id="subflow-dialog-user-count"></div>
 </div>
 
 <div id="node-dialog-confirm-deploy" class="hide">
     <form class="form-horizontal">
-        <div id="node-dialog-confirm-deploy-config" style="text-align: center; padding-top: 30px;">
-         Some of the nodes are not properly configured. Are you sure you want to deploy?
+        <div id="node-dialog-confirm-deploy-config" style="text-align: left; padding-top: 30px;" data-i18n="[prepend]deploy.confirm.improperlyConfigured;[append]deploy.confirm.confirm">
+         Some of the nodes are not properly configured. Are you sure you want to deploy?                    <ul style="font-size: 0.9em; width: 400px; margin: 10px auto; text-align: left;" id="node-dialog-confirm-deploy-invalid-list"></ul>
+        </div>              </div>
+        <div id="node-dialog-confirm-deploy-unknown" style="text-align: center; padding-top: 10px;">                <div id="node-dialog-confirm-deploy-unknown" style="text-align: left; padding-top: 10px;" data-i18n="[prepend]deploy.confirm.unknown;[append]deploy.confirm.confirm">
+         The workspace contains some unknown node types:                    <ul style="font-size: 0.9em; width: 400px; margin: 10px auto; text-align: left;" id="node-dialog-confirm-deploy-unknown-list"></ul>
+         <ul style="width: 300px; margin: auto; text-align: left;" id="node-dialog-confirm-deploy-unknown-list"></ul>               </div>
+         Are you sure you want to deploy?               <div id="node-dialog-confirm-deploy-unused" style="text-align: left; padding-top: 10px;" data-i18n="[prepend]deploy.confirm.unusedConfig;[append]deploy.confirm.confirm">
+            <ul style="font-size: 0.9em; width: 400px; margin: 10px auto; text-align: left;" id="node-dialog-confirm-deploy-unused-list"></ul>
         </div>
-        <div id="node-dialog-confirm-deploy-unknown" style="text-align: center; padding-top: 10px;">
-         The workspace contains some unknown node types:
-         <ul style="width: 300px; margin: auto; text-align: left;" id="node-dialog-confirm-deploy-unknown-list"></ul>
-         Are you sure you want to deploy?
         </div>
+
     </form>
 </div>
 
 <div id="node-dialog-library-save-confirm" class="hide">
     <form class="form-horizontal">
-        <div style="text-align: center; padding-top: 30px;">
-         A <span id="node-dialog-library-save-type"></span> called <span id="node-dialog-library-save-name"></span> already exists. Overwrite?
-        </div>
+        <div style="text-align: center; padding-top: 30px;" id="node-dialog-library-save-content">
     </form>
 </div>
 
 <div id="node-dialog-library-save" class="hide">
     <form class="form-horizontal">
         <div class="form-row">
-            <label for="node-dialog-library-save-folder"><i class="fa fa-folder-open"></i> Folder</label>
-            <input type="text" id="node-dialog-library-save-folder" placeholder="Folder">
+            <label for="node-dialog-library-save-folder" data-i18n="[append]library.folder"><i class="fa fa-folder-open"></i> </label>
+            <input type="text" id="node-dialog-library-save-folder" data-i18n="[placeholder]library.folderPlaceholder">
         </div>
         <div class="form-row">
-            <label for="node-dialog-library-save-filename"><i class="fa fa-file"></i> Filename</label>
-            <input type="text" id="node-dialog-library-save-filename" placeholder="Filename">
+            <label for="node-dialog-library-save-filename" data-i18n="[append]library.filename"><i class="fa fa-file"></i> </label>
+            <input type="text" id="node-dialog-library-save-filename" data-i18n="[placeholder]library.filenamePlaceholder">
         </div>
     </form>
 </div>
@@ -114,7 +123,7 @@
     <form class="form-horizontal">
         <div class="form-row">
             <ul id="node-dialog-library-breadcrumbs" class="breadcrumb">
-                <li class="active"><a href="#">Library</a></li>
+                <li class="active"><a href="#" data-i18n="[append]library.breadcrumb"></a></li>
             </ul>
         </div>
         <div class="form-row">
@@ -130,16 +139,14 @@
 <div id="node-dialog-rename-workspace" class="hide">
     <form class="form-horizontal">
         <div class="form-row">
-            <label for="node-input-workspace-name" ><i class="fa fa-tag"></i> Name:</label>
+            <label for="node-input-workspace-name" ><i class="fa fa-tag"></i> <span data-i18n="common.label.name"></span></label>
             <input type="text" id="node-input-workspace-name">
         </div>
     </form>
 </div>
 <div id="node-dialog-delete-workspace" class="hide">
     <form class="form-horizontal">
-        <div style="text-align: center; padding-top: 30px;">
-         Are you sure you want to delete '<span id="node-dialog-delete-workspace-name"></span>'?
-        </div>
+        <div style="text-align: center; padding-top: 30px;" id="node-dialog-delete-workspace-content"></div>
     </form>
 </div>
 
@@ -169,7 +176,6 @@
 </script>
 
 <script src="d3.min.js"></script>
-<script src="metricsgraphics.min.js"></script>
 <script src="markdown-it.min.js"></script>
 <script src="vendor/vendor.js"></script>
 <script src="vendor/ace/ace.js"></script>
@@ -201,462 +207,6 @@ function keys(event){
   }
 }
 
-var ENEBULAR_URL = "http://localhost:7000/";
-
-var enebularTransporter = new EnebularTransporter();
-var flowTab = new FlowTab();
-
-$.get("/sys/enebularurl", function(data) {
-    ENEBULAR_URL = data;
-    console.log("issuer", data);
-    enebularTransporter.load();
-
-}, "json");
-
-var Hook = function(){
-    var old;
-    this.addHook = function(obj, method, before, after){
-        old = obj[method];
-        obj[method] = function(){
-            before && before.apply(this,arguments);
-            var ret = old.apply(this,arguments);
-            after && after.apply(this, arguments, ret);
-            return ret;
-        }
-    }
-    this.removeHook = function(obj, method){
-        obj[method] = old;
-    }
-}
-
-var hook = new Hook();
-hook.addHook(RED.user, 'init', function() {}, function() {
-    RED.menu.addItem("menu-item-export", { id: 'menu-item-export-enebular', label: "enebular", onselect: onselectHandler });
-});
-
-hook.addHook(RED.sidebar, 'init', function() {}, function() {
-    onAdminInit();
-    onFlowInit();
-});
-
-//RED.sidebar.config
-
-function EnebularTransporter() {
-    var current_timer = null;
-    var callbacks = {};
-    window.addEventListener('message', function(e) {
-        var cbs = callbacks[e.data.event];
-        if(!cbs) return;
-        if(e.data.body.err) {
-            if(cbs.onError) cbs.onError();
-        }else{
-            if(cbs.onSuccess) cbs.onSuccess(e.data.body.content);
-        }
-        clearTimeout(current_timer);
-    });
-    return {
-        load : function() {
-            window.parent.postMessage({
-                event : 'loaded',
-            }, ENEBULAR_URL);
-        },
-        addFlow : function(body, _onSuccess, _onError, onTimeout) {
-            window.parent.postMessage({
-                event : 'flowadded',
-                body : body
-            }, ENEBULAR_URL);
-            callbacks['flowadded'] = {
-                onSuccess : _onSuccess,
-                onError : _onError
-            }
-            current_timer = setTimeout(onTimeout, 3000);
-        },
-        addSearchFlowListener : function(_onSuccess, _onError) {
-            callbacks['searchflow'] = {
-                onSuccess : _onSuccess,
-                onError : _onError
-            }
-        },
-        searchFlow : function(tag, onTimeout) {
-            console.log(tag);
-            window.parent.postMessage({
-                event : 'searchflow',
-                body : {
-                    tag : tag
-                }
-            }, ENEBULAR_URL);
-            current_timer = setTimeout(onTimeout, 3000);
-        }
-    }
-}
-
-    function onselectHandler(){
-        var nns = RED.nodes.createExportableNodeSet(RED.view.selection().nodes);
-        $("#dialog-form").html($("script[data-template-name='export-library-dialog']").html());
-        $("#node-input-filename").attr('nodes',JSON.stringify(nns));
-
-        $( "#dialog" ).dialog("option",{
-            title: "Export nodes to enebular",
-            buttons: [
-                {
-                    id: "node-dialog-ok",
-                    text: "Ok",
-                    click: function() {
-
-                        var flowName = $("#node-input-filename").val();
-                        var flowDescription = $("#node-input-description").val() || '';
-                        var flowTags = $("#node-input-tags").val() || '';
-                        var flowTagArray = flowTags.split(/[ ,]+/);
-                        var flowBody = $("#node-input-filename").attr('nodes');
-
-                        if (!/^\s*$/.test(flowName)) {
-                            enebularTransporter.addFlow({
-                                    title : flowName,
-                                    description : flowDescription,
-                                    tags : flowTagArray,
-                                    body : flowBody
-                            },
-                            function() {
-                                RED.notify("Saved flow to enebular", "success");
-                            },function() {
-                                RED.notify("Failed to save flow because of limit exceeded", "error");
-                            },function() {
-                                RED.notify("Failed to save flow to enebular", "error");
-                            });
-                            $( this ).dialog( "close" );
-                        } else {
-                            window.alert('Please enter a title.');
-                        }
-                    }
-                },
-                {
-                    id: "node-dialog-cancel",
-                    text: "Cancel",
-                    click: function() {
-                        $( this ).dialog( "close" );
-                    }
-                }
-            ]
-        }).dialog( "open" );
-
-        var md = window.markdownit();
-
-        $('#enebular-node-tabMarkdown').click(function(e){
-            $(this).addClass('is-open');
-            $('#enebular-node-tabPreview').removeClass('is-open');
-            $('#enebular-node-preview').removeClass('is-open');
-        });
-        $('#enebular-node-tabPreview').click(function(){
-            $(this).addClass('is-open');
-            $('#enebular-node-tabMarkdown').removeClass('is-open');
-            $('#enebular-node-preview').addClass('is-open');
-
-            var htmlText = !!($('#node-input-description').val()) ? md.render($('#node-input-description').val().trim()) : '<span class="muted">Nothing to preview</span>'
-
-            $('#enebular-node-preview').html(htmlText);
-        });
-    }
-
-
-function onAdminInit() {
-    RED.sidebar.addTab('admin', '<div id="tab-admin" style="display:none;">Admin</div>');
-    RED.sidebar.show('info');
-    admin_refresh();
-}
-
-function onFlowInit() {
-    RED.sidebar.addTab('flow', '<div id="tab-flow" style="display:none;">Flow</div>');
-    RED.sidebar.show('info');
-    flowTab.init();
-}
-
-
-function admin_refresh() {
-    get_nodes(function(err, nodes) {
-        var modules = {}
-           ,nodesEl = {}
-           ;
-
-        nodes.map(function(node){
-            modules[node.module] = node.module;
-            nodesEl[node.module] = '';
-        });
-
-        // install panel
-        var str  = '<div class="enebular-admin-install-panel">'
-                 +   '<div class="enebular-admin-search">'
-                 +     '<input id="admin-search-module-name" type="text" value="node-red-contrib-" class="enebular-admin-search-input" />'
-                 +     '<div id="admin-search-result" class="enebular-admin-search-result"></div>'
-                 +   '</div>'
-                 +   '<button id="admin-install-btn" class="enebular-admin-install-btn btn" disabled>Install</button>'
-                 + '</div>';
-
-        str     += '<hr class="enebular-hr">';
-
-        // module list
-        str     += '<ul class="enebular-admin-module-list">';
-
-        // node
-        nodes.forEach(function(n) {
-            var checked = n.enabled ? 'checked="checked"' : '';
-            var isDisabled = !n.enabled ? ' is-disabled' : '';
-
-            nodesEl[n.module] +=
-              '<li class="enebular-admin-node">'
-            +   '<input type="checkbox" name="enebularAdminSwitch" id="enebularAdminSwitch-'+n.name+'" '+checked+' data-cid="'+n.id+'" class="enebular-admin-switch" />'
-            +   '<label for="enebularAdminSwitch-'+n.name+'" class="enebular-admin-switchLabel"></label>'
-            +   '<span class="enebular-admin-node-name'+isDisabled+'" id="enebularAdminModuleName-'+n.name+'">'+n.name+'</span>'
-            + '</li>';
-        });
-
-        // module > node
-        Object.keys(modules).forEach(function(key) {
-            var deleteBtn = !(key === 'node-red') ? '<div data-cid="'+key+'" class="enebular-admin-delete-btn">×</div>' : '';
-
-            str += '<div class="enebular-admin-moduleWrapper">'
-                 +   '<div class="enebular-admin-module">'
-                 +     '<div class="enebular-admin-module-title">'+key+'</div>'
-                 +     deleteBtn
-                 +     '<ul class="enebular-admin-node-list" id="enebularAdminModule-'+key+'">'
-                 +       nodesEl[key]
-                 +     '</ul>'
-                 +   '</div>'
-                 + '</div>';
-        }, modules);
-
-        str += '</ul>';
-
-
-        $('#tab-admin').html('<div class="enebular-admin-wrapper">'+str+'</div>');
-
-        $('#admin-search-module-name').focus(function (e) {
-            RED.keyboard.remove(/* backspace */ 8);
-            RED.keyboard.remove(/* delete */ 46);
-        });
-
-        $('#admin-search-module-name').keyup(function(e) {
-            var name = $(this).val();
-            $("#admin-install-btn").prop("disabled", true);
-            search_module(name, function(err, content) {
-                if(err) {
-                    $('#admin-search-result').html('<div class="enebular-admin-search-item not-found">Not Found</div>');
-                     $('#admin-search-result').html('');
-                     $('#admin-search-result').removeClass('is-shown');
-                    return;
-                }
-                var html = content.map(function(m) {
-                    return '<div class="enebular-admin-search-item">'+m+'</div>';
-                }).join('');
-                $('#admin-search-result').html(html);
-                $('#admin-search-result').addClass('is-shown');
-            });
-        });
-
-        $('#admin-search-result').on('click', '.enebular-admin-search-item', function(e) {
-            var module_name = $(this).html();
-            $("#admin-install-btn").prop("disabled", false);
-            $('#admin-search-module-name').val(module_name);
-            $('#admin-search-result').html('');
-            $('#admin-search-result').removeClass('is-shown');
-        });
-
-        $('#admin-search-module-name').blur(function(e){
-            setTimeout(function(){
-                $('#admin-search-result').html('');
-                $('#admin-search-result').removeClass('is-shown');
-            }, 250);
-        });
-
-        $('#admin-install-btn').click(function(e) {
-            var name = $('#admin-search-module-name').val();
-            install_node(name, function() {console.log('success');admin_refresh();});
-        });
-
-        $('.enebular-admin-switch').change(function(e) {
-            var module = $(this).data('cid');
-            var enabled = $(this).is(':checked');
-            var id = $(this).attr("id");
-
-            var moduleName = id.replace(/^enebularAdminSwitch-/, '');
-
-            if(enabled) $('#enebularAdminModuleName-'+moduleName).removeClass('is-disabled');
-            else $('#enebularAdminModuleName-'+moduleName).addClass('is-disabled');
-
-            edit_node(module, enabled, function() {console.log('success');});
-        });
-
-        $('.enebular-admin-delete-btn').click(function(e) {
-            var module = $(this).data('cid');
-            if(window.confirm('“'+module+'” モジュールを削除してもよろしいですか？')) remove_node(module, function() {console.log('success');admin_refresh();});
-        });
-    });
-}
-
-function get_nodes(cb) {
-    admin_get('nodes', cb);
-}
-
-function search_module(module, cb) {
-    admin_get('search/'+module, function(err, data) {
-        if(err || data.err) cb(err || data.err);
-        else cb(null, data.content);
-    });
-}
-
-function install_node(module, cb) {
-    admin_post('nodes', {module : module}, cb);
-}
-
-function get_node(module, cb) {
-    admin_get('nodes/'+module, {module : module}, cb);
-}
-
-function edit_node(module, enabled, cb) {
-    admin_put('nodes/'+module, {enabled : enabled}, cb);
-}
-
-function remove_node(module, cb) {
-    admin_delete('nodes/'+module, cb);
-}
-
-function admin_get(url, cb) {
-    admin_base(url, 'GET', null, cb);
-}
-
-function admin_post(url, body, cb) {
-    admin_base(url, 'POST', JSON.stringify(body), cb);
-}
-
-function admin_put(url, body, cb) {
-    admin_base(url, 'PUT', JSON.stringify(body), cb);
-}
-
-function admin_delete(url, cb) {
-    admin_base(url, 'DELETE', null, cb);
-}
-
-function admin_base(url, method, body, cb) {
-    var auth_tokens = RED.settings.get("auth-tokens");
-    var headers = {
-        "Accept":"application/json",
-    }
-    if(auth_tokens) {
-        headers["Authorization"] = "Bearer "+auth_tokens.access_token;
-    }
-    $.ajax({
-        headers: headers,
-        contentType: 'application/json',
-        type: method,
-        data: body,
-        cache: false,
-        url: url,
-        success: function(data) {
-            //console.log("nodes", data);
-            cb(null, data);
-        }
-    });
-}
-
-function FlowTab() {
-    this.flows = {};
-}
-
-FlowTab.prototype.init = function() {
-    var that = this;
-    var str = '<input id="flow-search-module-name" type="text" placeholder="tag" value="" class="enebular-admin-search-input" />'+
-    '<div id="enebular-flow-items" class="enebular-flow-list"></div>';
-   $('#tab-flow').html('<div class="enebular-admin-wrapper">'+str+'</div>');
-    var str
-    = '<input id="flow-search-module-name" type="text" placeholder="Filter flows by tags..." value="" class="enebular-flow-search-input" />'
-    + '<hr class="enebular-hr">'
-    + '<div id="enebular-flow-items" class="enebular-flow-list"></div>';
-
-    $('#tab-flow').html(
-          '<div class="enebular-admin-wrapper">'
-        +   str
-        + '</div>'
-    );
-
-    $('#flow-search-module-name').focus(function (e) {
-        RED.keyboard.remove(/* backspace */ 8);
-        RED.keyboard.remove(/* delete */ 46);
-    });
-    
-    $('#flow-search-module-name').keyup(function (e) {
-        var tag = $('#flow-search-module-name').val();
-        console.log( tag );
-        if(tag == '')
-            that.searchFlow('');
-        else
-            that.searchFlow(tag);
-    });
-
-    that.initSearchFlowCallback();
-    that.searchFlow('');
-}
-
-FlowTab.prototype.initSearchFlowCallback = function() {
-    var that = this;
-    enebularTransporter.addSearchFlowListener(function(content) {
-        content.forEach(function(f) {
-            that.flows[f.id] = f;
-        });
-
-
-        var str = '<h3 class="enebular-flow-headline">Enebular flows</h3>';
-
-        str += content.map(function(flow) {
-
-            var tags_html = '';
-
-            if(flow.tags.filter(function(t){return t.length > 0;}).length > 0) {
-                tags_html = flow.tags.map(function(tag) {
-                    return '<span class="enebular-flow-item-tag">'+tag+'</span>';
-                }).join(', ');
-                tags_html = '<div class="enebular-flow-item-tags">Tags: '+tags_html+'</div>';
-            }
-
-            var reader = '…';
-            var wordCount = 100;
-            var textTrim = flow.description.substr(0, wordCount);
-            flow.description = (wordCount < flow.description.length)
-                               ? flow.description.substr(0, wordCount) + reader
-                               : flow.description;
-
-            return '<div class="enebular-flow-itemWrapper">'
-            + '<div class="enebular-flow-item">'
-            +   '<div class="enebular-flow-item-title">'
-            +     flow.title
-            +   '</div>'
-            +   '<div class="enebular-flow-item-body">'
-            +     '<div class="enebular-flow-item-desc">'
-            +       flow.description
-            +     '</div>'
-            +     tags_html
-            +     '<div class="enebular-flow-import-button" data-cid="'+flow.id+'"><i class="fa fa-download" title="Import this flow" aria-label="Import this flow"></i>'
-            +     '</div>'
-            +   '</div>'
-            + '</div>'
-            +'</div>';
-
-        }).join('');
-
-        $('#enebular-flow-items').html(str);
-
-        $('.enebular-flow-import-button').click(function() {
-            var flowId = $(this).data('cid');
-            that.importNode(that.flows[flowId].body);
-        });
-    });
-}
-
-FlowTab.prototype.searchFlow = function(tag) {
-    enebularTransporter.searchFlow(tag);
-}
-
-FlowTab.prototype.importNode = function(body) {
-    RED.view.importNodes(body);
-}
 
 </script>
 </body>
